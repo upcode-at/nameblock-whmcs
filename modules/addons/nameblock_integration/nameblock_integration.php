@@ -2,11 +2,14 @@
 
 function nameblock_integration_output($vars) {
     echo '<h2>Nameblock Integration</h2>';
-    echo '<p>Use this module to check domains against the Nameblock API.</p>';
+    echo '<p>Manage your Nameblock API integration here.</p>';
 
     $apiToken = $vars['apiToken'];
-    $api = new NameblockAPI($apiToken);
-    $status = $api->getAccountStatus();
+    $registrantsAPI = new Registrants($apiToken);
+    $registrants = $registrantsAPI->getAllRegistrants();
 
-    echo '<p>Account Status: ' . $status['status'] . '</p>';
+    echo '<h3>All Registrants</h3>';
+    foreach ($registrants as $registrant) {
+        echo "<p>Registrant ID: {$registrant['registrant_id']} - Name: {$registrant['name']}</p>";
+    }
 }

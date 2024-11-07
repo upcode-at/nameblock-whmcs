@@ -2,31 +2,16 @@
 
 class NameblockAPI {
 
-    private $apiToken;
-    private $apiUrl = 'https://api.nameblock.com/v1';
+    protected $apiToken;
+    protected $apiUrl = 'https://api.nameblock.com/v1';
 
     public function __construct($token) {
         $this->apiToken = $token;
     }
 
-    // Check if a domain is blocked
-    public function checkDomainBlockStatus($domain) {
-        $endpoint = $this->apiUrl . "/domain/check";
-        $data = ['domain' => $domain];
+    protected function makeRequest($endpoint, $data = [], $method = 'GET') {
+        $url = $this->apiUrl . $endpoint;
         
-        $response = $this->makeRequest($endpoint, $data);
-        
-        return $response;
-    }
-
-    // Get account status
-    public function getAccountStatus() {
-        $endpoint = $this->apiUrl . "/account/status";
-        
-        return $this->makeRequest($endpoint);
-    }
-
-    private function makeRequest($url, $data = []) {
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
@@ -34,7 +19,7 @@ class NameblockAPI {
             'Content-Type: application/json'
         ]);
 
-        if (!empty($data)) {
+        if ($method === 'POST') {
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
         }

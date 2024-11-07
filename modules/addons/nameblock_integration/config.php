@@ -9,7 +9,7 @@ function nameblock_integration_config() {
         'name' => 'Nameblock Integration',
         'description' => 'Integrates Nameblock API for domain blocking and checks within WHMCS',
         'version' => '1.0',
-        'author' => 'YourName',
+        'author' => 'Markus Schwarzinger',
         'fields' => [
             'apiToken' => [
                 'FriendlyName' => 'API Token',
