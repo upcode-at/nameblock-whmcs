@@ -1,9 +1,0 @@
-{
-    "name": "nameblock/nameblock-whmcs",
-    "autoload": {
-        "psr-4": {
-            "Nameblock\\NameblockWhmcs\\": "src/"
-        }
-    },
-    "require": {}
-}
