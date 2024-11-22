@@ -21,16 +21,60 @@
  require_once __DIR__ . '/lib/Endpoints/Orders.php';
  
 add_hook('DomainSearch', 1, function($vars) {
-     $apiToken = Capsule::table('tbladdonmodules')->where('module', 'nameblock_integration')->value('apiToken');
-     $blocksAPI = new Blocks($apiToken);
- 
-     $domain = $vars['sld'] . '.' . $vars['tld'];
-     $response = $blocksAPI->checkDomainBlockStatus($domain);
- 
-     if (isset($response['status']) && $response['status'] === 'blocked') {
-         return [
-             'status' => 'error',
-             'description' => 'This domain is blocked by Nameblock API and cannot be registered.',
-         ];
-     }
- });
+    try {
+        $apiToken = Capsule::table('tbladdonmodules')
+            ->where('module', 'nameblock')
+            ->where('setting', 'apiToken')
+            ->value('value');
+
+        $blocksAPI = new Blocks($apiToken);
+
+        $domain = $vars['sld'] . '.' . $vars['tld'];
+        $response = $blocksAPI->checkDomainBlockStatus($domain);
+
+        if (isset($response['status']) && $response['status'] === 'blocked') {
+            return [
+                'status' => 'error',
+                'description' => 'This domain is blocked by Nameblock API and cannot be registered.',
+            ];
+        }
+    } catch (Exception $e) {
+        // Log errors for debugging
+        logActivity('Nameblock API Error: ' . $e->getMessage());
+        return [
+            'status' => 'error',
+            'description' => 'An error occurred while checking the domain status. Please try again later.',
+        ];
+    }
+});
+
+add_hook('ClientAreaPage', 1, function ($vars) {
+    if ($vars['filename'] === 'clientarea' && isset($_GET['action']) && $_GET['action'] === 'nameblock') {
+        $apiToken = Capsule::table('tbladdonmodules')
+            ->where('module', 'nameblock')
+            ->where('setting', 'apiToken')
+            ->value('value');
+
+        $blocksAPI = new Blocks($apiToken);
+
+        $blockedDomains = [];
+        try {
+            $response = $blocksAPI->getAllBlocks('blocked');
+            if (isset($response['data'])) {
+                $blockedDomains = $response['data'];
+            }
+        } catch (Exception $e) {
+            logActivity('Nameblock API Error: ' . $e->getMessage());
+        }
+
+        return [
+            'pagetitle' => 'Blocked Domains',
+            'breadcrumb' => ['index.php?m=nameblock' => 'Blocked Domains'],
+            'templatefile' => 'clientarea',
+            'requirelogin' => true,
+            'vars' => [
+                'blockedDomains' => $blockedDomains,
+            ],
+        ];
+    }
+});

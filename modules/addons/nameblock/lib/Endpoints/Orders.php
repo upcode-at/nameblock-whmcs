@@ -12,7 +12,25 @@ class Orders extends NameblockAPI {
         return $this->makeRequest("/order/{$id}");
     }
 
-    public function createOrder($data) {
-        return $this->makeRequest('/order', $data, 'POST');
+    /**
+     * Create a new order.
+     *
+     * @param string $promotion The promotion code (optional).
+     * @param string $command The command type, e.g., "create".
+     * @param int $registrantId The ID of the registrant placing the order.
+     * @param array $orderLines An array of order lines (product details).
+     * @return array The API response.
+     * @throws Exception If the API request fails.
+     */
+    public function createOrder($promotion, $command, $registrantId, $orderLines) {
+        $endpoint = '/order';
+        $requestBody = [
+            'promotion' => $promotion,
+            'command' => $command,
+            'registrant_id' => $registrantId,
+            'order_line' => $orderLines,
+        ];
+
+        return $this->makeRequest($endpoint, $requestBody, 'POST');
     }
 }
