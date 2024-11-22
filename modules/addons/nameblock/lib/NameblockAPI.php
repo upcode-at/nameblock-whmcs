@@ -3,19 +3,17 @@
 class NameblockAPI {
 
     protected $apiToken;
-    protected $apiUrl = 'https://api.nameblock.com/v1';
+    protected $apiUrl = 'https://api.nameblock.com';
 
     public function __construct($token) {
         $this->apiToken = $token;
     }
 
     protected function makeRequest($endpoint, $data = [], $method = 'GET') {
-        $url = $this->apiUrl . $endpoint;
-        
+        $url = $this->apiUrl . $endpoint . '?api_key=' . $this->apiToken;
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Authorization: Bearer ' . $this->apiToken,
             'Content-Type: application/json'
         ]);
 
@@ -26,7 +24,6 @@ class NameblockAPI {
 
         $response = curl_exec($ch);
         curl_close($ch);
-
         return json_decode($response, true);
     }
 }

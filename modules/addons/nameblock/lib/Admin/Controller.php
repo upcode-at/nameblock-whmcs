@@ -28,6 +28,7 @@ class Controller {
 
     <ul>
         <li><a href="{$modulelink}&action=createOrder">Create New Order</a></li>
+        <li><a href="{$modulelink}&action=listOrders">List Orders</a></li>
         <li><a href="{$modulelink}&action=viewLogs">View Logs</a></li>
     </ul>
     HTML;
@@ -120,6 +121,41 @@ EOF;
         }
 
         return $smarty->fetch(ROOTDIR . '/modules/addons/nameblock/templates/order.tpl');
+    }
+
+    public function listOrders($vars)
+    {
+        $modulelink = $vars['modulelink'];
+        $smarty = new Smarty();
+        $templateVars = [
+            'modulelink' => $modulelink,
+            'orders' => [],
+            'error' => null,
+        ];
+    
+        try {
+            $apiToken = Capsule::table('tbladdonmodules')
+                ->where('module', 'nameblock')
+                ->where('setting', 'apiToken')
+                ->value('value');
+    
+            $ordersAPI = new \Orders($apiToken);
+            $response = $ordersAPI->getAllOrders();
+    
+            if (isset($response['data']) && is_array($response['data'])) {
+                $templateVars['orders'] = $response['data'];
+            } else {
+                $templateVars['error'] = "No orders found or invalid response format.";
+            }
+        } catch (\Exception $e) {
+            $templateVars['error'] = $e->getMessage();
+        }
+        
+        foreach ($templateVars as $key => $value) {
+            $smarty->assign($key, $value);
+        }
+    
+        return $smarty->fetch(ROOTDIR . '/modules/addons/nameblock/templates/listorder.tpl');
     }
 }
 

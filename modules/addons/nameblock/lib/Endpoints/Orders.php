@@ -4,7 +4,14 @@ require_once __DIR__ . '/../NameblockAPI.php';
 
 class Orders extends NameblockAPI {
 
-    public function getAllOrders() {
+    /**
+     * Get all orders.
+     *
+     * @return array The API response containing the list of orders.
+     * @throws Exception If the API request fails.
+     */
+    public function getAllOrders()
+    {
         return $this->makeRequest('/orders');
     }
 
