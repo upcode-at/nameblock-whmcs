@@ -5,6 +5,7 @@ namespace WHMCS\Module\Addon\Nameblock\Admin;
 use WHMCS\Database\Capsule;
 use WHMCS\Smarty;
 require_once __DIR__ . '/../Endpoints/Products.php';
+require_once __DIR__ . '/../Endpoints/TLDs.php';
 
 
 /**
@@ -21,7 +22,7 @@ class Controller {
      */
     public function index($vars)
     {
-        $modulelink = $vars['modulelink']; // Base URL for the module
+        $modulelink = $vars['modulelink'];
 
     return <<<HTML
     <h2>Nameblock Integration</h2>
@@ -35,6 +36,7 @@ class Controller {
         <li><a href="{$modulelink}&action=viewRegistrant">View Registrant</a></li>
         <li><a href="{$modulelink}&action=createRegistrant">Create Registrants</a></li>
         <li><a href="{$modulelink}&action=listProducts">List Products</a></li>
+        <li><a href="{$modulelink}&action=listTLDs">List TLDs</a></li>
         <li><a href="{$modulelink}&action=viewLogs">View Logs</a></li>
     </ul>
     HTML;
@@ -383,6 +385,42 @@ EOF;
         }
 
         return $smarty->fetch(ROOTDIR . '/modules/addons/nameblock/templates/listproducts.tpl');
+    }
+
+    public function listTLDs($vars)
+    {
+        $modulelink = $vars['modulelink'];
+        $smarty = new Smarty();
+        $templateVars = [
+            'modulelink' => $modulelink,
+            'tlds' => [],
+            'error' => null,
+        ];
+
+        try {
+            $apiToken = Capsule::table('tbladdonmodules')
+                ->where('module', 'nameblock')
+                ->where('setting', 'apiToken')
+                ->value('value');
+
+            $tldsAPI = new \TLDs($apiToken);
+
+            $response = $tldsAPI->getAllTLDs();
+
+            if (isset($response['data']) && is_array($response['data'])) {
+                $templateVars['tlds'] = $response['data'];
+            } else {
+                $templateVars['error'] = "No TLDs found or invalid response format.";
+            }
+        } catch (\Exception $e) {
+            $templateVars['error'] = $e->getMessage();
+        }
+
+        foreach ($templateVars as $key => $value) {
+            $smarty->assign($key, $value);
+        }
+
+        return $smarty->fetch(ROOTDIR . '/modules/addons/nameblock/templates/listtlds.tpl');
     }
 }
 
