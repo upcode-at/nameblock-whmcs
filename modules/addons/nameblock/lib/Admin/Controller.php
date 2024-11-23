@@ -4,6 +4,7 @@ namespace WHMCS\Module\Addon\Nameblock\Admin;
 
 use WHMCS\Database\Capsule;
 use WHMCS\Smarty;
+require_once __DIR__ . '/../Endpoints/Products.php';
 
 
 /**
@@ -33,6 +34,7 @@ class Controller {
         <li><a href="{$modulelink}&action=listRegistrants">List Registrants</a></li>
         <li><a href="{$modulelink}&action=viewRegistrant">View Registrant</a></li>
         <li><a href="{$modulelink}&action=createRegistrant">Create Registrants</a></li>
+        <li><a href="{$modulelink}&action=listProducts">List Products</a></li>
         <li><a href="{$modulelink}&action=viewLogs">View Logs</a></li>
     </ul>
     HTML;
@@ -338,6 +340,49 @@ EOF;
         }
 
         return $smarty->fetch(ROOTDIR . '/modules/addons/nameblock/templates/createregistrant.tpl');
+    }
+
+    public function listProducts($vars)
+    {
+        $modulelink = $vars['modulelink'];
+        $smarty = new Smarty();
+        $templateVars = [
+            'modulelink' => $modulelink,
+            'products' => [],
+            'error' => null,
+        ];
+
+        try {
+            $apiToken = Capsule::table('tbladdonmodules')
+                ->where('module', 'nameblock')
+                ->where('setting', 'apiToken')
+                ->value('value');
+
+            $productsAPI = new \Products($apiToken);
+
+            $responseAbuseShield = $productsAPI->getAllProducts('abuse_shield');
+            $responseBrandLock = $productsAPI->getAllProducts('brand_lock');
+
+            if (isset($responseAbuseShield['data']) && is_array($responseAbuseShield['data'])) {
+                $templateVars['products'] = array_merge($templateVars['products'], $responseAbuseShield['data']);
+            }
+
+            if (isset($responseBrandLock['data']) && is_array($responseBrandLock['data'])) {
+                $templateVars['products'] = array_merge($templateVars['products'], $responseBrandLock['data']);
+            }
+
+            if (empty($templateVars['products'])) {
+                $templateVars['error'] = "No products found.";
+            }
+        } catch (\Exception $e) {
+            $templateVars['error'] = $e->getMessage();
+        }
+
+        foreach ($templateVars as $key => $value) {
+            $smarty->assign($key, $value);
+        }
+
+        return $smarty->fetch(ROOTDIR . '/modules/addons/nameblock/templates/listproducts.tpl');
     }
 }
 

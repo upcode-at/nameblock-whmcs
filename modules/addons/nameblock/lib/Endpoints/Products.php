@@ -4,16 +4,15 @@ require_once __DIR__ . '/../NameblockAPI.php';
 
 class Products extends NameblockAPI {
 
-    public function getAllProducts($type = null) {
-        $params = [];
-        if ($type) {
-            $params['type'] = $type;
-        }
-
-        return $this->makeRequest('/products?' . http_build_query($params));
+    /**
+     * Fetch all products with an optional type filter.
+     *
+     * @return array The API response containing the list of products.
+     * @throws Exception If the API request fails.
+     */
+    public function getAllProducts()
+    {
+        return $this->makeRequest('/products');
     }
 
-    public function getProductById($id) {
-        return $this->makeRequest("/product/{$id}");
-    }
 }
