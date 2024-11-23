@@ -29,6 +29,10 @@ class Controller {
     <ul>
         <li><a href="{$modulelink}&action=createOrder">Create New Order</a></li>
         <li><a href="{$modulelink}&action=listOrders">List Orders</a></li>
+        <li><a href="{$modulelink}&action=listBlocks">List Blocks</a></li>
+        <li><a href="{$modulelink}&action=listRegistrants">List Registrants</a></li>
+        <li><a href="{$modulelink}&action=viewRegistrant">View Registrant</a></li>
+        <li><a href="{$modulelink}&action=createRegistrant">Create Registrants</a></li>
         <li><a href="{$modulelink}&action=viewLogs">View Logs</a></li>
     </ul>
     HTML;
@@ -156,6 +160,184 @@ EOF;
         }
     
         return $smarty->fetch(ROOTDIR . '/modules/addons/nameblock/templates/listorder.tpl');
+    }
+
+    public function listBlocks($vars)
+    {
+        $modulelink = $vars['modulelink'];
+        $smarty = new Smarty();
+        $templateVars = [
+            'modulelink' => $modulelink,
+            'blocks' => [],
+            'error' => null,
+        ];
+    
+        $hasFilters = isset($_GET['status']) || isset($_GET['date_type']) || isset($_GET['date_to']);
+    
+        if ($hasFilters) {
+            try {
+                $apiToken = Capsule::table('tbladdonmodules')
+                    ->where('module', 'nameblock')
+                    ->where('setting', 'apiToken')
+                    ->value('value');
+    
+                $blocksAPI = new \Blocks($apiToken);
+    
+                $status = $_GET['status'] ?? null;
+                $dateType = $_GET['date_type'] ?? null;
+                $dateTo = $_GET['date_to'] ?? null;
+    
+                $response = $blocksAPI->getAllBlocks($status, $dateType, $dateTo);
+    
+                if (isset($response['data']) && is_array($response['data'])) {
+                    $templateVars['blocks'] = $response['data'];
+                } else {
+                    $templateVars['error'] = "No blocks found or invalid response format.";
+                }
+            } catch (\Exception $e) {
+                $templateVars['error'] = $e->getMessage();
+            }
+        }
+    
+        foreach ($templateVars as $key => $value) {
+            $smarty->assign($key, $value);
+        }
+    
+        return $smarty->fetch(ROOTDIR . '/modules/addons/nameblock/templates/listblocks.tpl');
+    }
+
+    public function listRegistrants($vars)
+    {
+        $modulelink = $vars['modulelink'];
+        $smarty = new Smarty();
+        $templateVars = [
+            'modulelink' => $modulelink,
+            'registrants' => [],
+            'error' => null,
+        ];
+
+        try {
+            $apiToken = Capsule::table('tbladdonmodules')
+                ->where('module', 'nameblock')
+                ->where('setting', 'apiToken')
+                ->value('value');
+
+            $registrantsAPI = new \Registrants($apiToken);
+
+            $response = $registrantsAPI->getAllRegistrants();
+
+            if (isset($response['data']) && is_array($response['data'])) {
+                $templateVars['registrants'] = $response['data'];
+            } else {
+                $templateVars['error'] = "No registrants found or invalid response format.";
+            }
+        } catch (\Exception $e) {
+            $templateVars['error'] = $e->getMessage();
+        }
+
+        foreach ($templateVars as $key => $value) {
+            $smarty->assign($key, $value);
+        }
+
+        return $smarty->fetch(ROOTDIR . '/modules/addons/nameblock/templates/listregistrants.tpl');
+    }
+
+    public function viewRegistrant($vars)
+    {
+        $modulelink = $vars['modulelink'];
+        $smarty = new Smarty();
+        $templateVars = [
+            'modulelink' => $modulelink,
+            'registrant' => null,
+            'registrant_id' => null,
+            'error' => null,
+        ];
+
+        if (!empty($_GET['registrant_id'])) {
+            $templateVars['registrant_id'] = $_GET['registrant_id'];
+
+            try {
+                $apiToken = Capsule::table('tbladdonmodules')
+                    ->where('module', 'nameblock')
+                    ->where('setting', 'apiToken')
+                    ->value('value');
+
+                $registrantsAPI = new \Registrants($apiToken);
+
+                $response = $registrantsAPI->getRegistrantById($templateVars['registrant_id']);
+
+                if (isset($response['data']) && is_array($response['data'])) {
+                    $templateVars['registrant'] = $response['data'];
+                } else {
+                    $templateVars['error'] = "Registrant not found or invalid response format.";
+                }
+            } catch (\Exception $e) {
+                $templateVars['error'] = $e->getMessage();
+            }
+        }
+
+        foreach ($templateVars as $key => $value) {
+            $smarty->assign($key, $value);
+        }
+
+        return $smarty->fetch(ROOTDIR . '/modules/addons/nameblock/templates/viewregistrant.tpl');
+    }
+    
+    public function createRegistrant($vars)
+    {
+        $modulelink = $vars['modulelink'];
+        $smarty = new Smarty(); // WHMCS-specific Smarty instance
+        $templateVars = [
+            'modulelink' => $modulelink,
+            'error' => null,
+            'success' => null,
+        ];
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            try {
+                $apiToken = Capsule::table('tbladdonmodules')
+                    ->where('module', 'nameblock')
+                    ->where('setting', 'apiToken')
+                    ->value('value');
+
+                $registrantsAPI = new \Registrants($apiToken);
+
+                // Collect POST data
+                $data = [
+                    'name' => $_POST['name'] ?? '',
+                    'organization' => $_POST['organization'] ?? '',
+                    'email' => $_POST['email'] ?? '',
+                    'phone' => $_POST['phone'] ?? '',
+                    'street' => $_POST['street'] ?? '',
+                    'city' => $_POST['city'] ?? '',
+                    'postal_code' => $_POST['postal_code'] ?? '',
+                    'country_code' => $_POST['country_code'] ?? '',
+                ];
+
+                // Validate required fields
+                foreach ($data as $key => $value) {
+                    if (empty($value)) {
+                        throw new \Exception("The field {$key} is required.");
+                    }
+                }
+
+                $response = $registrantsAPI->createRegistrant($data);
+
+                if (isset($response['status']) && $response['status'] === 200) {
+                    $templateVars['success'] = "Registrant created successfully!";
+                } else {
+                    $templateVars['error'] = $response['message'] ?? "Failed to create registrant.";
+                }
+            } catch (\Exception $e) {
+                $templateVars['error'] = $e->getMessage();
+            }
+        }
+
+        foreach ($templateVars as $key => $value) {
+            $smarty->assign($key, $value);
+        }
+
+        return $smarty->fetch(ROOTDIR . '/modules/addons/nameblock/templates/createregistrant.tpl');
     }
 }
 
