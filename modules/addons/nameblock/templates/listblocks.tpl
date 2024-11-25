@@ -1,6 +1,7 @@
 <h2 style="text-align: center; color: #333; font-family: Arial, sans-serif;">List of Blocks</h2>
 
 <form method="get" action="{$modulelink}&action=listBlocks" style="max-width: 800px; margin: 20px auto; padding: 20px; background: #f9f9f9; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); font-family: Arial, sans-serif;">
+    <input type="hidden" name="module" value="nameblock">
     <input type="hidden" name="action" value="listBlocks">
     <div style="display: flex; flex-wrap: wrap; gap: 15px;">
         <div style="flex: 1; min-width: 200px;">
