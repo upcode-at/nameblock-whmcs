@@ -1,6 +1,7 @@
 <h2 style="text-align: center; color: #333; font-family: Arial, sans-serif;">View Registrant</h2>
 
-<form method="get" action="{$modulelink}" style="max-width: 400px; margin: 20px auto; padding: 20px; background: #f9f9f9; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); font-family: Arial, sans-serif;">
+<form method="get" action="{$modulelink}&action=viewRegistrant" style="max-width: 400px; margin: 20px auto; padding: 20px; background: #f9f9f9; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); font-family: Arial, sans-serif;">
+    <input type="hidden" name="module" value="nameblock">
     <input type="hidden" name="action" value="viewRegistrant">
     <label for="registrant_id" style="font-weight: bold; display: block; margin-bottom: 5px;">Registrant ID:</label>
     <input type="text" name="registrant_id" id="registrant_id" value="{$registrant_id|default:''}" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; margin-bottom: 15px;">
