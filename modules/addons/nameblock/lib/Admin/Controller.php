@@ -86,7 +86,7 @@ EOF;
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 $apiToken = Capsule::table('tbladdonmodules')
-                    ->where('module', 'nameblock_integration')
+                    ->where('module', 'nameblock')
                     ->where('setting', 'apiToken')
                     ->value('value');
 
