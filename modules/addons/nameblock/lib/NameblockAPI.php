@@ -11,7 +11,6 @@ class NameblockAPI {
 
     protected function makeRequest($endpoint, $data = [], $method = 'GET') {
         $url = $this->apiUrl . $endpoint . '?api_key=' . $this->apiToken;
-        
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_HTTPHEADER, [

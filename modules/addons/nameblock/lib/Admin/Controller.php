@@ -38,6 +38,7 @@ class Controller {
         <li><a href="{$modulelink}&action=listProducts">List Products</a></li>
         <li><a href="{$modulelink}&action=listTLDs">List TLDs</a></li>
         <li><a href="{$modulelink}&action=viewLogs">View Logs</a></li>
+        <li><a href="addonmodules.php?module=nameblock&action=syncProducts">Sync Nameblock Products</a></li>
     </ul>
     HTML;
     }
@@ -363,7 +364,6 @@ EOF;
             $productsAPI = new \Products($apiToken);
 
             $responseAbuseShield = $productsAPI->getAllProducts('abuse_shield');
-            $responseBrandLock = $productsAPI->getAllProducts('brand_lock');
 
             if (isset($responseAbuseShield['data']) && is_array($responseAbuseShield['data'])) {
                 $templateVars['products'] = array_merge($templateVars['products'], $responseAbuseShield['data']);
@@ -421,6 +421,88 @@ EOF;
         }
 
         return $smarty->fetch(ROOTDIR . '/modules/addons/nameblock/templates/listtlds.tpl');
+    }
+
+    public function syncProducts($vars)
+    {
+        $modulelink = $vars['modulelink'];
+
+        try {
+            $apiToken = Capsule::table('tbladdonmodules')
+                ->where('module', 'nameblock')
+                ->where('setting', 'apiToken')
+                ->value('value');
+
+            $productsAPI = new \Products($apiToken);
+            $response = $productsAPI->getAllProducts();
+
+            if (!isset($response['data']) || !is_array($response['data'])) {
+                return "Invalid response from the Nameblock API or no products found.";
+            }
+
+            foreach ($response['data'] as $product) {
+                $productData = [
+                    'type' => 'other',
+                    'gid' => 1,
+                    'name' => $product['name'],
+                    'description' => $product['description'],
+                    'hidden' => 0,
+                    'tax' => 1,
+                    'showdomainoptions' => 1,
+                    'paytype' => 'recurring',
+                    'created_at' => date('Y-m-d H:i:s'),
+                    'updated_at' => date('Y-m-d H:i:s'),
+                ];
+
+                $existingProduct = Capsule::table('tblproducts')
+                    ->where('name', $product['name'])
+                    ->first();
+
+                if ($existingProduct) {
+                    Capsule::table('tblproducts')
+                        ->where('id', $existingProduct->id)
+                        ->update($productData);
+
+                    $productId = $existingProduct->id;
+                } else {
+                    $productId = Capsule::table('tblproducts')->insertGetId($productData);
+                }
+
+                if (isset($product['price'])) {
+                    foreach ($product['price'] as $price) {
+                        $existingPricing = Capsule::table('tblpricing')
+                            ->where('type', 'product')
+                            ->where('relid', $productId)
+                            ->where('currency', 1)
+                            ->first();
+
+                        $pricingData = [
+                            'type' => 'product',
+                            'relid' => $productId,
+                            'currency' => 1,
+                            'monthly' => 0,
+                            'quarterly' => 0,
+                            'semiannually' => 0,
+                            'annually' => $price['create'],
+                            'biennially' => $price['create'] * 2,
+                            'triennially' => $price['create'] * 3,
+                        ];
+
+                        if ($existingPricing) {
+                            Capsule::table('tblpricing')
+                                ->where('id', $existingPricing->id)
+                                ->update($pricingData);
+                        } else {
+                            Capsule::table('tblpricing')->insert($pricingData);
+                        }
+                    }
+                }
+            }
+
+            return "Products synchronized successfully.";
+        } catch (\Exception $e) {
+            return "Error during synchronization: " . $e->getMessage();
+        }
     }
 }
 
