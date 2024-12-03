@@ -38,7 +38,7 @@ class Controller {
         <li><a href="{$modulelink}&action=listProducts">List Products</a></li>
         <li><a href="{$modulelink}&action=listTLDs">List TLDs</a></li>
         <li><a href="{$modulelink}&action=viewLogs">View Logs</a></li>
-        <li><a href="addonmodules.php?module=nameblock&action=syncProducts">Sync Nameblock Products</a></li>
+        <li><a href="{$modulelink}&action=syncProducts">Sync Nameblock Products</a></li>
     </ul>
     HTML;
     }
@@ -426,24 +426,43 @@ EOF;
     public function syncProducts($vars)
     {
         $modulelink = $vars['modulelink'];
-
+    
         try {
+            $productGroup = Capsule::table('tblproductgroups')
+                ->where('name', 'Nameblock')
+                ->first();
+    
+            $productGroupId = null;
+    
+            if (!$productGroup) {
+                $productGroupId = Capsule::table('tblproductgroups')->insertGetId([
+                    'name' => 'Nameblock',
+                    'slug' => 'nameblock',
+                    'headline' => 'Recommended Nameblock Products',
+                    'tagline' => 'Choose from our exclusive Nameblock services',
+                    'orderfrmtpl' => 'default',
+                    'disabled' => 0,
+                ]);
+            } else {
+                $productGroupId = $productGroup->id;
+            }
+    
             $apiToken = Capsule::table('tbladdonmodules')
                 ->where('module', 'nameblock')
                 ->where('setting', 'apiToken')
                 ->value('value');
-
+    
             $productsAPI = new \Products($apiToken);
             $response = $productsAPI->getAllProducts();
-
+    
             if (!isset($response['data']) || !is_array($response['data'])) {
                 return "Invalid response from the Nameblock API or no products found.";
             }
-
+    
             foreach ($response['data'] as $product) {
                 $productData = [
                     'type' => 'other',
-                    'gid' => 1,
+                    'gid' => $productGroupId,
                     'name' => $product['name'],
                     'description' => $product['description'],
                     'hidden' => 0,
@@ -453,21 +472,21 @@ EOF;
                     'created_at' => date('Y-m-d H:i:s'),
                     'updated_at' => date('Y-m-d H:i:s'),
                 ];
-
+    
                 $existingProduct = Capsule::table('tblproducts')
                     ->where('name', $product['name'])
                     ->first();
-
+    
                 if ($existingProduct) {
                     Capsule::table('tblproducts')
                         ->where('id', $existingProduct->id)
                         ->update($productData);
-
+    
                     $productId = $existingProduct->id;
                 } else {
                     $productId = Capsule::table('tblproducts')->insertGetId($productData);
                 }
-
+    
                 if (isset($product['price'])) {
                     foreach ($product['price'] as $price) {
                         $existingPricing = Capsule::table('tblpricing')
@@ -475,7 +494,7 @@ EOF;
                             ->where('relid', $productId)
                             ->where('currency', 1)
                             ->first();
-
+    
                         $pricingData = [
                             'type' => 'product',
                             'relid' => $productId,
@@ -487,7 +506,7 @@ EOF;
                             'biennially' => $price['create'] * 2,
                             'triennially' => $price['create'] * 3,
                         ];
-
+    
                         if ($existingPricing) {
                             Capsule::table('tblpricing')
                                 ->where('id', $existingPricing->id)
@@ -498,7 +517,7 @@ EOF;
                     }
                 }
             }
-
+    
             return "Products synchronized successfully.";
         } catch (\Exception $e) {
             return "Error during synchronization: " . $e->getMessage();
