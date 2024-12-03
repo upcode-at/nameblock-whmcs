@@ -99,7 +99,6 @@ function nameblock_config()
 function nameblock_activate()
 {
     try {
-        // Create a table for tracking Nameblock API requests (optional)
         Capsule::schema()
             ->create(
                 'mod_nameblock_logs',
@@ -113,7 +112,15 @@ function nameblock_activate()
                 }
             );
 
-        // Add initial configuration fields to tbladdonmodules
+        Capsule::schema()->create('mod_nameblock_pending_orders', function ($table) {
+            $table->increments('id');
+            $table->integer('order_id');
+            $table->string('domain');
+            $table->integer('user_id');
+            $table->enum('status', ['pending', 'completed', 'failed'])->default('pending');
+            $table->timestamps();
+        });
+
         Capsule::table('tbladdonmodules')->insert([
             [
                 'module' => 'nameblock',
@@ -152,6 +159,7 @@ function nameblock_deactivate()
 {
     try {
         Capsule::schema()->dropIfExists('mod_nameblock_logs');
+        Capsule::schema()->dropIfExists('mod_nameblock_pending_orders');
 
         Capsule::table('tbladdonmodules')
             ->where('module', 'nameblock')
