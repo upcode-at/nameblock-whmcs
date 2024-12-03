@@ -429,14 +429,14 @@ EOF;
     
         try {
             $productGroup = Capsule::table('tblproductgroups')
-                ->where('name', 'Nameblock')
+                ->where('name', 'NameBlock')
                 ->first();
     
             $productGroupId = null;
     
             if (!$productGroup) {
                 $productGroupId = Capsule::table('tblproductgroups')->insertGetId([
-                    'name' => 'Nameblock',
+                    'name' => 'NameBlock',
                     'slug' => 'nameblock',
                     'headline' => 'Recommended Nameblock Products',
                     'tagline' => 'Choose from our exclusive Nameblock services',

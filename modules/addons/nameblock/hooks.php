@@ -13,14 +13,39 @@
  * @license http://www.whmcs.com/license/ WHMCS Eula
  */
 
- use WHMCS\Database\Capsule;
+use WHMCS\Database\Capsule;
 
- require_once __DIR__ . '/lib/NameblockAPI.php';
- require_once __DIR__ . '/lib/Endpoints/Blocks.php';
- require_once __DIR__ . '/lib/Endpoints/Registrants.php';
- require_once __DIR__ . '/lib/Endpoints/Orders.php';
- 
- add_hook('AfterShoppingCartCheckout', 1, function($vars) {
+require_once __DIR__ . '/lib/NameblockAPI.php';
+require_once __DIR__ . '/lib/Endpoints/Blocks.php';
+require_once __DIR__ . '/lib/Endpoints/Registrants.php';
+require_once __DIR__ . '/lib/Endpoints/Orders.php';
+
+add_hook('AfterShoppingCartCheckout', 1, function ($vars) {
+    $orderID = $vars['OrderID'];
+    $userID = $vars['ClientID'];
+
+    $domains = Capsule::table('tbldomains')
+        ->where('orderid', $orderID)
+        ->get();
+
+    if ($domains->isEmpty()) {
+        return;
+    }
+
+    foreach ($domains as $domain) {
+        // Insert order into custom table
+        Capsule::table('mod_nameblock_pending_orders')->insert([
+            'order_id' => $orderID,
+            'domain' => $domain->domain,
+            'user_id' => $userID,
+            'status' => 'pending',
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s'),
+        ]);
+    }
+});
+
+add_hook('AfterShoppingCartCheckout', 1, function($vars) {
     $orderID = $vars['OrderID'];
     $orderData = Capsule::table('tblorders')->where('id', $orderID)->first();
 
@@ -71,6 +96,7 @@
         }
     }
 });
+
 
 add_hook('ClientAreaPage', 1, function ($vars) {
     if ($vars['filename'] === 'clientarea' && isset($_GET['action']) && $_GET['action'] === 'nameblock') {

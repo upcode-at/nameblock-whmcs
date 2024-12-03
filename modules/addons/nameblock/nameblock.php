@@ -77,6 +77,13 @@ function nameblock_config()
                 'Description' => 'Enter your Nameblock API Token here',
                 'Default' => '',
             ],
+            'recommendedProduct' => [
+                'FriendlyName' => 'Recommended Product ID',
+                'Type' => 'text',
+                'Size' => '10',
+                'Description' => 'Enter the Product ID to recommend in the cart',
+                'Default' => '',
+            ],
         ]
     ];
 }
@@ -144,10 +151,8 @@ function nameblock_activate()
 function nameblock_deactivate()
 {
     try {
-        // Drop the table if it exists
         Capsule::schema()->dropIfExists('mod_nameblock_logs');
 
-        // Remove module-specific configurations from tbladdonmodules
         Capsule::table('tbladdonmodules')
             ->where('module', 'nameblock')
             ->delete();
@@ -182,4 +187,68 @@ function nameblock_output($vars)
     $dispatcher = new AdminDispatcher();
 
     echo $dispatcher->dispatch($action, $vars);
+}
+
+function nameblock_cron() {
+    $pendingOrders = Capsule::table('mod_nameblock_pending_orders')
+        ->where('status', 'pending')
+        ->get();
+
+    if ($pendingOrders->isEmpty()) {
+        return;
+    }
+
+    $apiToken = Capsule::table('tbladdonmodules')
+        ->where('module', 'nameblock')
+        ->where('setting', 'apiToken')
+        ->value('value');
+
+    if (!$apiToken) {
+        logActivity("Nameblock: API token is not configured.");
+        return;
+    }
+
+    $controller = new \WHMCS\Module\Addon\Nameblock\Admin\Controller();
+
+    foreach ($pendingOrders as $order) {
+        try {
+            $payload = [
+                'promotion' => null,
+                'registrant_id' => $order->user_id,
+                'block_label' => $order->domain,
+                'domain_name' => $order->domain,
+                'tld' => substr(strrchr($order->domain, "."), 1),
+                'product_id' => 'as-01',
+                'quantity' => 1,
+                'term' => 1,
+            ];
+
+            $response = $controller->createOrder($payload);
+
+            if (isset($response['status']) && $response['status'] === 'ok') {
+                Capsule::table('mod_nameblock_pending_orders')
+                    ->where('id', $order->id)
+                    ->update([
+                        'status' => 'completed',
+                        'updated_at' => date('Y-m-d H:i:s'),
+                    ]);
+                logActivity("Nameblock Order Created Successfully for Domain: {$order->domain}");
+            } else {
+                logActivity("Nameblock Order Failed for Domain: {$order->domain}. Response: " . json_encode($response));
+            }
+        } catch (\Exception $e) {
+            logActivity("Nameblock Order Processing Error for Domain: {$order->domain}. Error: " . $e->getMessage());
+        }
+    }
+}
+
+function nameblock_cronjob()
+{
+    return [
+        [
+            'name' => 'Process Nameblock Orders',
+            'description' => 'Attempts to process pending Nameblock orders every hour.',
+            'file' => 'cron.php',
+        ],
+    ];
 }
