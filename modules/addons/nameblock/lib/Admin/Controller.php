@@ -435,103 +435,141 @@ EOF;
     public function syncProducts($vars)
     {
         $modulelink = $vars['modulelink'];
-    
+        $smarty = new Smarty();
+
+        $templateVars = [
+            'modulelink' => $modulelink,
+            'groupName' => '',
+            'groupHeadline' => '',
+            'groupTagline' => '',
+            'products' => [],
+            'error' => null,
+            'success' => null,
+        ];
+
         try {
-            $productGroup = Capsule::table('tblproductgroups')
-                ->where('name', 'NameBlock')
-                ->first();
-    
-            $productGroupId = null;
-    
-            if (!$productGroup) {
-                $productGroupId = Capsule::table('tblproductgroups')->insertGetId([
-                    'name' => 'NameBlock',
-                    'slug' => 'nameblock',
-                    'headline' => 'Recommended Nameblock Products',
-                    'tagline' => 'Choose from our exclusive Nameblock services',
-                    'orderfrmtpl' => 'default',
-                    'disabled' => 0,
-                ]);
-            } else {
-                $productGroupId = $productGroup->id;
-            }
-    
             $apiToken = Capsule::table('tbladdonmodules')
                 ->where('module', 'nameblock')
                 ->where('setting', 'apiToken')
                 ->value('value');
-    
+
             $productsAPI = new \Products($apiToken);
             $response = $productsAPI->getAllProducts();
-    
+
             if (!isset($response['data']) || !is_array($response['data'])) {
-                return "Invalid response from the Nameblock API or no products found.";
-            }
-    
-            foreach ($response['data'] as $product) {
-                $productData = [
-                    'type' => 'other',
-                    'gid' => $productGroupId,
-                    'name' => $product['name'],
-                    'description' => $product['description'],
-                    'hidden' => 0,
-                    'tax' => 1,
-                    'showdomainoptions' => 1,
-                    'paytype' => 'recurring',
-                    'created_at' => date('Y-m-d H:i:s'),
-                    'updated_at' => date('Y-m-d H:i:s'),
-                ];
-    
-                $existingProduct = Capsule::table('tblproducts')
-                    ->where('name', $product['name'])
-                    ->first();
-    
-                if ($existingProduct) {
-                    Capsule::table('tblproducts')
-                        ->where('id', $existingProduct->id)
-                        ->update($productData);
-    
-                    $productId = $existingProduct->id;
-                } else {
-                    $productId = Capsule::table('tblproducts')->insertGetId($productData);
+                $templateVars['error'] = "Invalid response from the Nameblock API or no products found.";
+                foreach ($templateVars as $key => $value) {
+                    $smarty->assign($key, $value);
                 }
-    
-                if (isset($product['price'])) {
-                    foreach ($product['price'] as $price) {
-                        $existingPricing = Capsule::table('tblpricing')
-                            ->where('type', 'product')
-                            ->where('relid', $productId)
-                            ->where('currency', 1)
-                            ->first();
-    
-                        $pricingData = [
-                            'type' => 'product',
-                            'relid' => $productId,
-                            'currency' => 1,
-                            'monthly' => 0,
-                            'quarterly' => 0,
-                            'semiannually' => 0,
-                            'annually' => $price['create'],
-                            'biennially' => $price['create'] * 2,
-                            'triennially' => $price['create'] * 3,
-                        ];
-    
-                        if ($existingPricing) {
-                            Capsule::table('tblpricing')
-                                ->where('id', $existingPricing->id)
-                                ->update($pricingData);
-                        } else {
-                            Capsule::table('tblpricing')->insert($pricingData);
-                        }
+                
+                return $smarty->fetch(ROOTDIR . '/modules/addons/nameblock/templates/syncproducts.tpl');
+            }
+
+            $templateVars['products'] = $response['data'];
+
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                $groupName = $_POST['group_name'] ?? 'NameBlock';
+                $groupHeadline = $_POST['group_headline'] ?? 'Recommended Nameblock Products';
+                $groupTagline = $_POST['group_tagline'] ?? 'Choose from our exclusive Nameblock services';
+
+                $productGroup = Capsule::table('tblproductgroups')
+                    ->where('name', $groupName)
+                    ->first();
+
+                $productGroupId = null;
+
+                if (!$productGroup) {
+                    $productGroupId = Capsule::table('tblproductgroups')->insertGetId([
+                        'name' => $groupName,
+                        'slug' => strtolower(str_replace(' ', '-', $groupName)),
+                        'headline' => $groupHeadline,
+                        'tagline' => $groupTagline,
+                        'hidden' => 1, // Set the group to hidden by default
+                        'orderfrmtpl' => 'default',
+                    ]);
+                } else {
+                    $productGroupId = $productGroup->id;
+                    Capsule::table('tblproductgroups')
+                        ->where('id', $productGroupId)
+                        ->update([
+                            'headline' => $groupHeadline,
+                            'tagline' => $groupTagline,
+                            'hidden' => 1, // Ensure the group remains hidden
+                        ]);
+                }
+
+                foreach ($response['data'] as $product) {
+                    $productName = $_POST["product_name_{$product['id']}"] ?? $product['name'];
+                    $productDescription = $_POST["product_description_{$product['id']}"] ?? $product['description'];
+                    $productPrice = $_POST["product_price_{$product['id']}"] ?? $product['price'][0]['create'];
+
+                    $productData = [
+                        'type' => 'other',
+                        'gid' => $productGroupId,
+                        'name' => $productName,
+                        'description' => $productDescription,
+                        'hidden' => 0,
+                        'tax' => 1,
+                        'showdomainoptions' => 1,
+                        'paytype' => 'recurring',
+                        'created_at' => date('Y-m-d H:i:s'),
+                        'updated_at' => date('Y-m-d H:i:s'),
+                    ];
+
+                    $existingProduct = Capsule::table('tblproducts')
+                        ->where('name', $productName)
+                        ->first();
+
+                    if ($existingProduct) {
+                        Capsule::table('tblproducts')
+                            ->where('id', $existingProduct->id)
+                            ->update($productData);
+
+                        $productId = $existingProduct->id;
+                    } else {
+                        $productId = Capsule::table('tblproducts')->insertGetId($productData);
+                    }
+
+                    $existingPricing = Capsule::table('tblpricing')
+                        ->where('type', 'product')
+                        ->where('relid', $productId)
+                        ->where('currency', 1)
+                        ->first();
+
+                    $pricingData = [
+                        'type' => 'product',
+                        'relid' => $productId,
+                        'currency' => 1,
+                        'monthly' => 0,
+                        'quarterly' => 0,
+                        'semiannually' => 0,
+                        'annually' => $productPrice,
+                        'biennially' => $productPrice * 2,
+                        'triennially' => $productPrice * 3,
+                    ];
+
+                    if ($existingPricing) {
+                        Capsule::table('tblpricing')
+                            ->where('id', $existingPricing->id)
+                            ->update($pricingData);
+                    } else {
+                        Capsule::table('tblpricing')->insert($pricingData);
                     }
                 }
+
+                $templateVars['success'] = "Products synchronized successfully.";
             }
-    
-            return "Products synchronized successfully.";
         } catch (\Exception $e) {
-            return "Error during synchronization: " . $e->getMessage();
+            $templateVars['error'] = "Error during synchronization: " . $e->getMessage();
         }
+
+        foreach ($templateVars as $key => $value) {
+            $smarty->assign($key, $value);
+        }
+        
+        return $smarty->fetch(ROOTDIR . '/modules/addons/nameblock/templates/syncproducts.tpl');
     }
+
 
     public function dashboard($vars)
     {
