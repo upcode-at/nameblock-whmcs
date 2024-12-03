@@ -502,6 +502,9 @@ EOF;
                     $productName = $_POST["product_name_{$product['id']}"] ?? $product['name'];
                     $productDescription = $_POST["product_description_{$product['id']}"] ?? $product['description'];
                     $productPrice = $_POST["product_price_{$product['id']}"] ?? $product['price'][0]['create'];
+                    $discountPercent = $_POST["product_discount_{$product['id']}"] ?? 0;
+
+                    $discountedPrice = $productPrice - ($productPrice * ($discountPercent / 100));
 
                     $productData = [
                         'type' => 'other',
@@ -540,12 +543,12 @@ EOF;
                         'type' => 'product',
                         'relid' => $productId,
                         'currency' => 1,
-                        'monthly' => 0,
-                        'quarterly' => 0,
-                        'semiannually' => 0,
-                        'annually' => $productPrice,
-                        'biennially' => $productPrice * 2,
-                        'triennially' => $productPrice * 3,
+                        'monthly' => -1,
+                        'quarterly' => -1,
+                        'semiannually' => -1,
+                        'annually' => $discountedPrice,
+                        'biennially' => $discountedPrice * 2,
+                        'triennially' => $discountedPrice * 3,
                     ];
 
                     if ($existingPricing) {

@@ -32,7 +32,10 @@
                 <textarea id="product_description_{$product.id}" name="product_description_{$product.id}" style="width: 100%; padding: 10px; margin-bottom: 10px;">{$product.description}</textarea>
 
                 <label for="product_price_{$product.id}">Annual Price:</label>
-                <input type="number" id="product_price_{$product.id}" name="product_price_{$product.id}" value="{$product.price.0.create}" style="width: 100%; padding: 10px;">
+                <input type="number" id="product_price_{$product.id}" name="product_price_{$product.id}" value="{$product.price.0.create}" style="width: 100%; padding: 10px; margin-bottom: 10px; display: inline-block;">
+
+                <label for="product_discount_{$product.id}">Discount (%):</label>
+                <input type="number" id="product_discount_{$product.id}" name="product_discount_{$product.id}" value="0" style="width: 100%; padding: 10px; margin-bottom: 10px; display: inline-block;">
             </div>
         {/foreach}
     </div>
