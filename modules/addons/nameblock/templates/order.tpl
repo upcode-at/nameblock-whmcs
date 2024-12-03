@@ -62,6 +62,19 @@
 
 <div class="form-container">
     <h2>Create New Order</h2>
+
+        {if $success}
+        <div style="color: green; font-weight: bold; margin-bottom: 20px; text-align: center;">
+            {$success}
+        </div>
+        {/if}
+
+        {if $error}
+            <div style="color: red; font-weight: bold; margin-bottom: 20px; text-align: center;">
+                {$error}
+            </div>
+        {/if}
+
     <form method="post" action="addonmodules.php?module=nameblock&action=createOrder">
         <label for="promotion">Promotion Code (optional):</label>
         <input type="text" id="promotion" name="promotion" placeholder="Enter promotion code" value="SUMMER2024">

@@ -39,6 +39,7 @@ class Controller {
         <li><a href="{$modulelink}&action=listTLDs">List TLDs</a></li>
         <li><a href="{$modulelink}&action=viewLogs">View Logs</a></li>
         <li><a href="{$modulelink}&action=syncProducts">Sync Nameblock Products</a></li>
+        <li><a href="{$modulelink}&action=dashboard">Dashboard</a></li>
     </ul>
     HTML;
     }
@@ -77,22 +78,23 @@ EOF;
     {
         $modulelink = $vars['modulelink'];
         $smarty = new Smarty();
-
+    
         $templateVars = [
             'modulelink' => $modulelink,
             'response' => null,
             'error' => null,
+            'success' => null,
         ];
-
+    
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 $apiToken = Capsule::table('tbladdonmodules')
                     ->where('module', 'nameblock')
                     ->where('setting', 'apiToken')
                     ->value('value');
-
+    
                 $ordersAPI = new \Orders($apiToken);
-
+    
                 $promotion = $_POST['promotion'] ?? '';
                 $registrantId = (int)$_POST['registrant_id'];
                 $orderLines = [
@@ -107,15 +109,21 @@ EOF;
                         ],
                     ],
                 ];
-
+    
                 $response = $ordersAPI->createOrder($promotion, 'create', $registrantId, $orderLines);
-
+    
+                if (isset($response['status']) && $response['status'] === 'ok') {
+                    $templateVars['success'] = "Order successfully created! Order ID: {$response['data']['id']}";
+                } else {
+                    $templateVars['error'] = $response['message'] ?? 'Failed to create the order.';
+                }
+    
                 $templateVars['response'] = $response;
             } catch (\Exception $e) {
-                $templateVars['error'] = $e->getMessage();
+                $templateVars['error'] = "Error: " . $e->getMessage();
             }
         }
-
+    
         $templateVars['promotion'] = $_POST['promotion'] ?? '';
         $templateVars['registrant_id'] = $_POST['registrant_id'] ?? '';
         $templateVars['block_label'] = $_POST['block_label'] ?? '';
@@ -124,13 +132,14 @@ EOF;
         $templateVars['product_id'] = $_POST['product_id'] ?? 'as-01';
         $templateVars['quantity'] = $_POST['quantity'] ?? 1;
         $templateVars['term'] = $_POST['term'] ?? 1;
-
+    
         foreach ($templateVars as $key => $value) {
             $smarty->assign($key, $value);
         }
-
+    
         return $smarty->fetch(ROOTDIR . '/modules/addons/nameblock/templates/order.tpl');
     }
+    
 
     public function listOrders($vars)
     {
@@ -522,6 +531,58 @@ EOF;
         } catch (\Exception $e) {
             return "Error during synchronization: " . $e->getMessage();
         }
+    }
+
+    public function dashboard($vars)
+    {
+        $modulelink = $vars['modulelink'];
+        $smarty = new \Smarty();
+
+        $totalOrders = Capsule::table('mod_nameblock_pending_orders')->count();
+        $pendingOrders = Capsule::table('mod_nameblock_pending_orders')->where('status', 'pending')->count();
+        $completedOrders = Capsule::table('mod_nameblock_pending_orders')->where('status', 'completed')->count();
+        $failedOrders = Capsule::table('mod_nameblock_pending_orders')->where('status', 'failed')->count();
+
+        $smarty->assign('modulelink', $modulelink);
+        $smarty->assign('totalOrders', $totalOrders);
+        $smarty->assign('pendingOrders', $pendingOrders);
+        $smarty->assign('completedOrders', $completedOrders);
+        $smarty->assign('failedOrders', $failedOrders);
+
+        return $smarty->fetch(ROOTDIR . '/modules/addons/nameblock/templates/dashboard.tpl');
+    }
+
+    public function listPendingOrders($vars)
+    {
+        $modulelink = $vars['modulelink'];
+        $smarty = new Smarty();
+
+        $templateVars = [
+            'modulelink' => $modulelink,
+            'pendingOrders' => [],
+            'error' => null,
+        ];
+
+        try {
+            // Fetch pending orders from the database
+            $pendingOrders = Capsule::table('mod_nameblock_pending_orders')
+                ->where('status', 'pending')
+                ->get();
+
+            if ($pendingOrders->isEmpty()) {
+                $templateVars['error'] = "No pending orders found.";
+            } else {
+                $templateVars['pendingOrders'] = $pendingOrders;
+            }
+        } catch (\Exception $e) {
+            $templateVars['error'] = "Error fetching pending orders: " . $e->getMessage();
+        }
+
+        foreach ($templateVars as $key => $value) {
+            $smarty->assign($key, $value);
+        }
+
+        return $smarty->fetch(ROOTDIR . '/modules/addons/nameblock/templates/listpendingorders.tpl');
     }
 }
 
