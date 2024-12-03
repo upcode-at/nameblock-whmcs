@@ -20,31 +20,55 @@
  require_once __DIR__ . '/lib/Endpoints/Registrants.php';
  require_once __DIR__ . '/lib/Endpoints/Orders.php';
  
-add_hook('DomainSearch', 1, function($vars) {
-    try {
-        $apiToken = Capsule::table('tbladdonmodules')
-            ->where('module', 'nameblock')
-            ->where('setting', 'apiToken')
-            ->value('value');
+ add_hook('AfterShoppingCartCheckout', 1, function($vars) {
+    $orderID = $vars['OrderID'];
+    $orderData = Capsule::table('tblorders')->where('id', $orderID)->first();
 
-        $blocksAPI = new Blocks($apiToken);
+    if (!$orderData) {
+        return;
+    }
 
-        $domain = $vars['sld'] . '.' . $vars['tld'];
-        $response = $blocksAPI->checkDomainBlockStatus($domain);
+    $userID = $orderData->userid;
 
-        if (isset($response['status']) && $response['status'] === 'blocked') {
-            return [
-                'status' => 'error',
-                'description' => 'This domain is blocked by Nameblock API and cannot be registered.',
-            ];
-        }
-    } catch (Exception $e) {
-        // Log errors for debugging
-        logActivity('Nameblock API Error: ' . $e->getMessage());
-        return [
-            'status' => 'error',
-            'description' => 'An error occurred while checking the domain status. Please try again later.',
+    $domains = Capsule::table('tbldomains')
+        ->where('orderid', $orderID)
+        ->get();
+
+    if ($domains->isEmpty()) {
+        return;
+    }
+
+    $apiToken = Capsule::table('tbladdonmodules')
+        ->where('module', 'nameblock')
+        ->where('setting', 'apiToken')
+        ->value('value');
+
+    if (!$apiToken) {
+        logActivity("Nameblock: API token not configured.");
+        return;
+    }
+
+    $controller = new \WHMCS\Module\Addon\Nameblock\Admin\Controller();
+
+    foreach ($domains as $domain) {
+        $orderPayload = [
+            'promotion' => $orderData->promocode ?? null,
+            'registrant_id' => $userID,
+            'block_label' => $domain->domain,
+            'domain_name' => $domain->domain,
+            'tld' => substr(strrchr($domain->domain, "."), 1),
+            'product_id' => 'as-01',
+            'quantity' => 1,
+            'term' => 1,
         ];
+
+        try {
+            $response = $controller->createOrder($orderPayload);
+
+            logActivity("Nameblock Order Created for Domain: {$domain->domain}. Response: " . json_encode($response));
+        } catch (\Exception $e) {
+            logActivity("Nameblock Order Creation Failed for Domain: {$domain->domain}. Error: " . $e->getMessage());
+        }
     }
 });
 
