@@ -27,7 +27,36 @@ class Blocks extends NameblockAPI {
         }
 
         $queryString = http_build_query($params);
-        return $this->makeRequest('/blocks?' . $queryString);
+        return $this->makeRequest('/blocks', '', 'GET', '&'.$queryString);
+    }
+
+
+    /**
+     * Fetch block list with optional query parameters.
+     *
+     * @param string|null $label The block label.
+     * @param string|null $tld The TLD.
+     * @param string|null $productId The product ID.
+     * @return array The API response containing the list of blocks.
+     * @throws Exception If the API request fails.
+     */
+    public function getBlockList($label = null, $tld = null, $productId = null)
+    {
+        $params = [];
+        if ($label) {
+            $params['label'] = $label;
+        }
+        if ($tld) {
+            $tld = str_replace('.', '', $tld ?? '');
+            $params['tld'] = $tld;
+        }
+        if ($productId) {
+            $params['product_id'] = $productId;
+        }
+
+        $queryString = http_build_query($params);
+
+        return $this->makeRequest('/block', '', 'GET', '&'.$queryString);
     }
 
     public function checkDomainBlockStatus($domain) {

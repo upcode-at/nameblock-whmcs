@@ -31,7 +31,7 @@ class Controller {
     <ul>
         <li><a href="{$modulelink}&action=createOrder">Create New Order</a></li>
         <li><a href="{$modulelink}&action=listOrders">List Orders</a></li>
-        <li><a href="{$modulelink}&action=listBlocks">List Blocks</a></li>
+        <li><a href="{$modulelink}&action=getBlockList">List Blocks</a></li>
         <li><a href="{$modulelink}&action=listRegistrants">List Registrants</a></li>
         <li><a href="{$modulelink}&action=viewRegistrant">View Registrant</a></li>
         <li><a href="{$modulelink}&action=createRegistrant">Create Registrants</a></li>
@@ -175,50 +175,6 @@ EOF;
         }
     
         return $smarty->fetch(ROOTDIR . '/modules/addons/nameblock/templates/listorder.tpl');
-    }
-
-    public function listBlocks($vars)
-    {
-        $modulelink = $vars['modulelink'];
-        $smarty = new Smarty();
-        $templateVars = [
-            'modulelink' => $modulelink,
-            'blocks' => [],
-            'error' => null,
-        ];
-    
-        $hasFilters = isset($_GET['status']) || isset($_GET['date_type']) || isset($_GET['date_to']);
-    
-        if ($hasFilters) {
-            try {
-                $apiToken = Capsule::table('tbladdonmodules')
-                    ->where('module', 'nameblock')
-                    ->where('setting', 'apiToken')
-                    ->value('value');
-    
-                $blocksAPI = new \Blocks($apiToken);
-    
-                $status = $_GET['status'] ?? null;
-                $dateType = $_GET['date_type'] ?? null;
-                $dateTo = $_GET['date_to'] ?? null;
-    
-                $response = $blocksAPI->getAllBlocks($status, $dateType, $dateTo);
-    
-                if (isset($response['data']) && is_array($response['data'])) {
-                    $templateVars['blocks'] = $response['data'];
-                } else {
-                    $templateVars['error'] = "No blocks found or invalid response format.";
-                }
-            } catch (\Exception $e) {
-                $templateVars['error'] = $e->getMessage();
-            }
-        }
-    
-        foreach ($templateVars as $key => $value) {
-            $smarty->assign($key, $value);
-        }
-    
-        return $smarty->fetch(ROOTDIR . '/modules/addons/nameblock/templates/listblocks.tpl');
     }
 
     public function listRegistrants($vars)
@@ -510,7 +466,7 @@ EOF;
                     $productData = [
                         'type' => 'other',
                         'gid' => $productGroupId,
-                        'name' => $productName,
+                        'name' => $product['name'],
                         'description' => $productDescription,
                         'hidden' => 0,
                         'tax' => 1,
@@ -626,5 +582,48 @@ EOF;
 
         return $smarty->fetch(ROOTDIR . '/modules/addons/nameblock/templates/listpendingorders.tpl');
     }
+
+    public function getBlockList($vars)
+    {
+        $modulelink = $vars['modulelink'];
+        $smarty = new Smarty();
+        $templateVars = [
+            'modulelink' => $modulelink,
+            'variants' => [],
+            'error' => null,
+        ];
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            try {
+                $apiToken = Capsule::table('tbladdonmodules')
+                    ->where('module', 'nameblock')
+                    ->where('setting', 'apiToken')
+                    ->value('value');
+
+                $blocksAPI = new \Blocks($apiToken);
+
+                $label = $_POST['label'] ?? null;
+                $tld = str_replace('.', '', $_POST['tld'] ?? '');
+                $productId = $_POST['product_id'] ?? null;
+
+                $response = $blocksAPI->getBlockList($label, $tld, $productId);
+
+                if (isset($response['data']['variants']) && is_array($response['data']['variants'])) {
+                    $templateVars['variants'] = $response['data']['variants'];
+                } else {
+                    $templateVars['error'] = "No variants found or invalid response format.";
+                }
+            } catch (\Exception $e) {
+                $templateVars['error'] = $e->getMessage();
+            }
+        }
+
+        foreach ($templateVars as $key => $value) {
+            $smarty->assign($key, $value);
+        }
+
+        return $smarty->fetch(ROOTDIR . '/modules/addons/nameblock/templates/getblocklist.tpl');
+    }
+
 }
 

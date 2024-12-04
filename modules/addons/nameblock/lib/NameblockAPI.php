@@ -9,8 +9,8 @@ class NameblockAPI {
         $this->apiToken = $token;
     }
 
-    protected function makeRequest($endpoint, $data = [], $method = 'GET') {
-        $url = $this->apiUrl . $endpoint . '?api_key=' . $this->apiToken;
+    protected function makeRequest($endpoint, $data = [], $method = 'GET', $query='') {
+        $url = $this->apiUrl . $endpoint . '?api_key=' . $this->apiToken . $query;
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
