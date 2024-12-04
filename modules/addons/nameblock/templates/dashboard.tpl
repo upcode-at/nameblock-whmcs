@@ -28,7 +28,4 @@
             </tr>
         </tbody>
     </table>
-    <div style="text-align: center; margin-top: 20px;">
-        <a href="{$modulelink}&action=listPendingOrders" style="text-decoration: none; background: #007bff; color: #fff; padding: 10px 20px; border-radius: 5px;">View Pending Orders</a>
-    </div>
 </div>

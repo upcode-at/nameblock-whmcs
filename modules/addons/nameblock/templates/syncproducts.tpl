@@ -26,7 +26,7 @@
         {foreach from=$products item=product}
             <div style="flex: 1 1 calc(50% - 20px); border: 1px solid #ddd; padding: 15px; border-radius: 4px; background: #fff; box-sizing: border-box;">
                 <label for="product_name_{$product.id}">Product Name:</label>
-                <input type="text" id="product_name_{$product.id}" name="product_name_{$product.id}" value="{$product.name}" style="width: 100%; padding: 10px; margin-bottom: 10px;">
+                <input type="text" id="product_name_{$product.id}" name="product_name_{$product.id}" value="{$product.name}" style="width: 100%; padding: 10px; margin-bottom: 10px;" readonly>
 
                 <label for="product_description_{$product.id}">Description:</label>
                 <textarea id="product_description_{$product.id}" name="product_description_{$product.id}" style="width: 100%; padding: 10px; margin-bottom: 10px;">{$product.description}</textarea>
