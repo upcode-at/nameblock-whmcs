@@ -97,6 +97,7 @@ EOF;
     
                 $promotion = $_POST['promotion'] ?? '';
                 $registrantId = (int)$_POST['registrant_id'];
+                $tld = str_replace('.', '', $_POST['tld'] ?? '');
                 $orderLines = [
                     [
                         'quantity' => (int)$_POST['quantity'],
@@ -105,7 +106,7 @@ EOF;
                         'payload' => [
                             'block_label' => $_POST['block_label'],
                             'domain_name' => $_POST['domain_name'],
-                            'tld' => $_POST['tld'],
+                            'tld' => $tld,
                         ],
                     ],
                 ];

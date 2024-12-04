@@ -20,111 +20,39 @@ require_once __DIR__ . '/lib/Endpoints/Blocks.php';
 require_once __DIR__ . '/lib/Endpoints/Registrants.php';
 require_once __DIR__ . '/lib/Endpoints/Orders.php';
 
-add_hook('AfterShoppingCartCheckout', 1, function ($vars) {
-    $orderID = $vars['OrderID'];
-    $userID = $vars['ClientID'];
 
-    $domains = Capsule::table('tbldomains')
-        ->where('orderid', $orderID)
+/**
+ * Hook to mark Nameblock product orders after payment is completed.
+ * The actual processing will be done with a delay.
+ *
+ * @param array $params WHMCS parameters, including Order ID and related details.
+ */
+add_hook('OrderPaid', 1, function($params) {
+    // Order details
+    $orderId = $params['orderid'];
+
+    // Fetch order items
+    $orderItems = Capsule::table('tblhosting')
+        ->where('orderid', $orderId)
         ->get();
 
-    if ($domains->isEmpty()) {
-        return;
-    }
+    // Loop through all items in the order
+    foreach ($orderItems as $item) {
+        // Fetch product details to determine if it's a Nameblock product
+        $product = Capsule::table('tblproducts')
+            ->where('id', $item->packageid)
+            ->first();
 
-    foreach ($domains as $domain) {
-        // Insert order into custom table
-        Capsule::table('mod_nameblock_pending_orders')->insert([
-            'order_id' => $orderID,
-            'domain' => $domain->domain,
-            'user_id' => $userID,
-            'status' => 'pending',
-            'created_at' => date('Y-m-d H:i:s'),
-            'updated_at' => date('Y-m-d H:i:s'),
-        ]);
-    }
-});
-
-add_hook('AfterShoppingCartCheckout', 1, function($vars) {
-    $orderID = $vars['OrderID'];
-    $orderData = Capsule::table('tblorders')->where('id', $orderID)->first();
-
-    if (!$orderData) {
-        return;
-    }
-
-    $userID = $orderData->userid;
-
-    $domains = Capsule::table('tbldomains')
-        ->where('orderid', $orderID)
-        ->get();
-
-    if ($domains->isEmpty()) {
-        return;
-    }
-
-    $apiToken = Capsule::table('tbladdonmodules')
-        ->where('module', 'nameblock')
-        ->where('setting', 'apiToken')
-        ->value('value');
-
-    if (!$apiToken) {
-        logActivity("Nameblock: API token not configured.");
-        return;
-    }
-
-    $controller = new \WHMCS\Module\Addon\Nameblock\Admin\Controller();
-
-    foreach ($domains as $domain) {
-        $orderPayload = [
-            'promotion' => $orderData->promocode ?? null,
-            'registrant_id' => $userID,
-            'block_label' => $domain->domain,
-            'domain_name' => $domain->domain,
-            'tld' => substr(strrchr($domain->domain, "."), 1),
-            'product_id' => 'as-01',
-            'quantity' => 1,
-            'term' => 1,
-        ];
-
-        try {
-            $response = $controller->createOrder($orderPayload);
-
-            logActivity("Nameblock Order Created for Domain: {$domain->domain}. Response: " . json_encode($response));
-        } catch (\Exception $e) {
-            logActivity("Nameblock Order Creation Failed for Domain: {$domain->domain}. Error: " . $e->getMessage());
+        if ($product && strpos($product->name, 'Nameblock') !== false) {
+            // Nameblock product found, mark the order for future processing
+            Capsule::table('mod_nameblock_pending_orders')->insert([
+                'order_id' => $orderId,
+                'product_id' => $item->packageid,
+                'user_id' => $item->userid,
+                'status' => 'pending',
+                'created_at' => date('Y-m-d H:i:s'),
+                'process_after' => date('Y-m-d H:i:s', strtotime('+2 hours')),
+            ]);
         }
-    }
-});
-
-
-add_hook('ClientAreaPage', 1, function ($vars) {
-    if ($vars['filename'] === 'clientarea' && isset($_GET['action']) && $_GET['action'] === 'nameblock') {
-        $apiToken = Capsule::table('tbladdonmodules')
-            ->where('module', 'nameblock')
-            ->where('setting', 'apiToken')
-            ->value('value');
-
-        $blocksAPI = new Blocks($apiToken);
-
-        $blockedDomains = [];
-        try {
-            $response = $blocksAPI->getAllBlocks('blocked');
-            if (isset($response['data'])) {
-                $blockedDomains = $response['data'];
-            }
-        } catch (Exception $e) {
-            logActivity('Nameblock API Error: ' . $e->getMessage());
-        }
-
-        return [
-            'pagetitle' => 'Blocked Domains',
-            'breadcrumb' => ['index.php?m=nameblock' => 'Blocked Domains'],
-            'templatefile' => 'clientarea',
-            'requirelogin' => true,
-            'vars' => [
-                'blockedDomains' => $blockedDomains,
-            ],
-        ];
     }
 });
