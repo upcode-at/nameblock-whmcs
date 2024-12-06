@@ -602,8 +602,19 @@ EOF;
 
                 $blocksAPI = new \Blocks($apiToken);
 
-                $label = $_POST['label'] ?? null;
-                $tld = str_replace('.', '', $_POST['tld'] ?? '');
+                $domain = $_POST['domain'] ?? null;
+                if ($domain) {
+                    $parts = explode('.', $domain, 2);
+                    if (count($parts) == 2) {
+                        $label = $parts[0];
+                        $tld = $parts[1];
+                    } else {
+                        throw new \Exception("Invalid domain format. Please enter a domain like 'example.com'.");
+                    }
+                } else {
+                    throw new \Exception("Domain is required.");
+                }
+
                 $productId = $_POST['product_id'] ?? null;
 
                 $response = $blocksAPI->getBlockList($label, $tld, $productId);

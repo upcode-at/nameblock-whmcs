@@ -5,13 +5,8 @@
     <input type="hidden" name="action" value="getBlockList">
     <div style="display: flex; flex-wrap: wrap; gap: 15px;">
         <div style="flex: 1; min-width: 200px;">
-            <label for="label" style="font-weight: bold; display: block; margin-bottom: 5px;">Label:</label>
-            <input type="text" name="label" id="label" value="{$smarty.post.label|escape}" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px;">
-        </div>
-
-        <div style="flex: 1; min-width: 200px;">
-            <label for="tld" style="font-weight: bold; display: block; margin-bottom: 5px;">TLD:</label>
-            <input type="text" name="tld" id="tld" value="{$smarty.post.tld|escape}" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px;">
+            <label for="domain" style="font-weight: bold; display: block; margin-bottom: 5px;">Domain:</label>
+            <input type="text" name="domain" id="domain" value="{$smarty.post.domain|escape}" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px;">
         </div>
 
         <div style="flex: 1; min-width: 200px;">
