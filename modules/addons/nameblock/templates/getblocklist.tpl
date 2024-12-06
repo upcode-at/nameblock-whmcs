@@ -11,7 +11,12 @@
 
         <div style="flex: 1; min-width: 200px;">
             <label for="product_id" style="font-weight: bold; display: block; margin-bottom: 5px;">Product ID:</label>
-            <input type="text" name="product_id" id="product_id" value="{$smarty.post.product_id|escape}" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px;">
+            <select name="product_id" id="product_id" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px;">
+                <option value="">Select a Product</option>
+                {foreach from=$products item=product}
+                    <option value="{$product.id}" {if $smarty.post.product_id == $product.id}selected{/if}>{$product.name}</option>
+                {/foreach}
+            </select>
         </div>
     </div>
 

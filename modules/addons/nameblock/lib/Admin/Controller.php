@@ -590,15 +590,33 @@ EOF;
         $templateVars = [
             'modulelink' => $modulelink,
             'variants' => [],
+            'products' => [],
             'error' => null,
         ];
 
+        try {
+            $apiToken = Capsule::table('tbladdonmodules')
+                ->where('module', 'nameblock')
+                ->where('setting', 'apiToken')
+                ->value('value');
+
+            $productsAPI = new \Products($apiToken);
+            $responseAbuseShield = $productsAPI->getAllProducts('abuse_shield');
+
+            if (isset($responseAbuseShield['data']) && is_array($responseAbuseShield['data'])) {
+                $templateVars['products'] = $responseAbuseShield['data'];
+            } else {
+                $templateVars['error'] = "No products found or invalid response format.";
+            }
+        } catch (\Exception $e) {
+            $templateVars['error'] = $e->getMessage();
+        }
+
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
-                $apiToken = Capsule::table('tbladdonmodules')
-                    ->where('module', 'nameblock')
-                    ->where('setting', 'apiToken')
-                    ->value('value');
+                if (empty($apiToken)) {
+                    throw new \Exception("API token is required.");
+                }
 
                 $blocksAPI = new \Blocks($apiToken);
 
@@ -616,6 +634,10 @@ EOF;
                 }
 
                 $productId = $_POST['product_id'] ?? null;
+
+                if (empty($productId)) {
+                    throw new \Exception("Product ID is required.");
+                }
 
                 $response = $blocksAPI->getBlockList($label, $tld, $productId);
 
