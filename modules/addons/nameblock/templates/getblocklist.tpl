@@ -10,7 +10,7 @@
         </div>
 
         <div style="flex: 1; min-width: 200px;">
-            <label for="product_id" style="font-weight: bold; display: block; margin-bottom: 5px;">Product ID:</label>
+            <label for="product_id" style="font-weight: bold; display: block; margin-bottom: 5px;">Product:</label>
             <select name="product_id" id="product_id" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px;">
                 <option value="">Select a Product</option>
                 {foreach from=$products item=product}
