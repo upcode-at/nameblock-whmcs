@@ -14,6 +14,9 @@
  */
 
 use WHMCS\Database\Capsule;
+use WHMCS\View\Menu\Item as MenuItem;
+use WHMCS\ClientArea;
+
 
 require_once __DIR__ . '/lib/NameblockAPI.php';
 require_once __DIR__ . '/lib/Endpoints/Blocks.php';
@@ -54,5 +57,34 @@ add_hook('OrderPaid', 1, function($params) {
                 'process_after' => date('Y-m-d H:i:s', strtotime('+2 hours')),
             ]);
         }
+    }
+});
+
+add_hook('ClientAreaPrimaryNavbar', 1, function (MenuItem $primaryNavbar) {
+    if (!is_null($_SESSION['uid'])) {
+        $primaryNavbar->addChild('nameblock_blocklist', [
+            'label' => 'Block List',
+            'uri' => 'clientarea.php?action=productdetails&m=nameblock&action=getBlockList',
+            'order' => 10,
+        ]);
+    }
+});
+
+add_hook('ClientAreaPage', 1, function($vars) {
+    if ($_GET['m'] === 'nameblock' && $_GET['action'] === 'getBlockList') {
+        $ca = new ClientArea();
+        $ca->setPageTitle("My Block List");
+        $ca->addToBreadCrumb('index.php', 'Home');
+        $ca->addToBreadCrumb('clientarea.php', 'Client Area');
+        $ca->addToBreadCrumb('clientarea.php?action=productdetails&m=nameblock&action=getBlockList', 'Block List');
+
+        // Controller-Methode für Daten abrufen
+        $controller = new \Nameblock\Client\Controller();
+        $output = $controller->getBlockList($vars);
+
+        $ca->setTemplate('clientblocklist'); // Lade das Template
+        $ca->assign('output', $output);
+
+        return $ca->output();
     }
 });

@@ -6,6 +6,9 @@ use WHMCS\Database\Capsule;
 use WHMCS\Smarty;
 require_once __DIR__ . '/../Endpoints/Products.php';
 require_once __DIR__ . '/../Endpoints/TLDs.php';
+require_once __DIR__ . '/../Endpoints/Blocks.php';
+require_once __DIR__ . '/../Endpoints/Orders.php';
+require_once __DIR__ . '/../Endpoints/Registrants.php';
 
 
 /**
