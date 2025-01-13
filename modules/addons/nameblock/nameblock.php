@@ -1,6 +1,6 @@
 <?php
 /**
- * Nameblock Integration Addon Module for WHMCS
+ * NameBlock - Prevent DNS Abuse Addon Module for WHMCS
  *
  * Provides admin and client functionalities for managing Nameblock products.
  */
@@ -21,8 +21,8 @@ if (!defined("WHMCS")) {
 function nameblock_config()
 {
     return [
-        'name' => 'Nameblock Integration',
-        'description' => 'This module provides Nameblock Integration',
+        'name' => 'NameBlock - Prevent DNS Abuse',
+        'description' => 'This module provides NameBlock - Prevent DNS Abuse',
         'author' => 'Nameblock',
         'language' => 'english',
         'version' => '1.1',

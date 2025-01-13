@@ -16,10 +16,10 @@
     <input type="text" id="group_name" name="group_name" placeholder="NameBlock" value="NameBlock" style="width: 100%; padding: 10px; margin-bottom: 15px;">
 
     <label for="group_headline">Group Headline:</label>
-    <input type="text" id="group_headline" name="group_headline" placeholder="Recommended Nameblock Products" value="Recommended Nameblock Products" style="width: 100%; padding: 10px; margin-bottom: 15px;">
+    <input type="text" id="group_headline" name="group_headline" placeholder="Recommended NameBlock Products" value="Recommended NameBlock Products" style="width: 100%; padding: 10px; margin-bottom: 15px;">
 
     <label for="group_tagline">Group Tagline:</label>
-    <input type="text" id="group_tagline" name="group_tagline" placeholder="Choose from our exclusive Nameblock services" value="Choose from our exclusive Nameblock services" style="width: 100%; padding: 10px; margin-bottom: 15px;">
+    <input type="text" id="group_tagline" name="group_tagline" placeholder="Choose from our exclusive NameBlock services" value="Choose from our exclusive NameBlock services" style="width: 100%; padding: 10px; margin-bottom: 15px;">
 
     <h3>Products</h3>
     <div style="display: flex; flex-wrap: wrap; gap: 20px;">

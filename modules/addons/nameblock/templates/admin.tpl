@@ -1,4 +1,4 @@
-<h2>Nameblock Integration Data Overview</h2>
+<h2>NameBlock - Prevent DNS Abuse Data Overview</h2>
 
 <!-- Registrants Section -->
 <h3>Registrants</h3>

@@ -12,7 +12,7 @@ require_once __DIR__ . '/../Endpoints/Registrants.php';
 
 
 /**
- * Admin Area Controller for Nameblock Integration
+ * Admin Area Controller for NameBlock - Prevent DNS Abuse
  */
 class Controller {
 
@@ -28,8 +28,8 @@ class Controller {
         $modulelink = $vars['modulelink'];
 
     return <<<HTML
-    <h2>Nameblock Integration</h2>
-    <p>Welcome to the Nameblock Integration Module.</p>
+    <h2>NameBlock - Prevent DNS Abuse</h2>
+    <p>Welcome to the NameBlock - Prevent DNS Abuse Module.</p>
 
     <ul>
         <li><a href="{$modulelink}&action=createOrder">Create New Order</a></li>
@@ -429,7 +429,7 @@ EOF;
 
             if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $groupName = $_POST['group_name'] ?? 'NameBlock';
-                $groupHeadline = $_POST['group_headline'] ?? 'Recommended Nameblock Products';
+                $groupHeadline = $_POST['group_headline'] ?? '';
                 $groupTagline = $_POST['group_tagline'] ?? 'Choose from our exclusive Nameblock services';
 
                 $productGroup = Capsule::table('tblproductgroups')
