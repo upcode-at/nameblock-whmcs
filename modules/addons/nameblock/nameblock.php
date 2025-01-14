@@ -34,11 +34,10 @@ function nameblock_config()
                 'Description' => 'Enter your Nameblock API Token here',
                 'Default' => '',
             ],
-            'recommendedProduct' => [
-                'FriendlyName' => 'Recommended Product ID',
-                'Type' => 'text',
-                'Size' => '10',
-                'Description' => 'Enter the Product ID to recommend in the cart',
+            'agreement' => [
+                'FriendlyName' => 'Agreement',
+                'Type' => 'yesno',
+                'Description' => 'I agree to the <a href="https://nameblock.com/terms" target="_blank">Terms of Service</a>',
                 'Default' => '',
             ],
         ]
@@ -93,6 +92,16 @@ function nameblock_deactivate()
  */
 function nameblock_output($vars)
 {
+    $agreementAccepted = Capsule::table('tbladdonmodules')
+        ->where('module', 'nameblock')
+        ->where('setting', 'agreement')
+        ->value('value');
+
+    if (!$agreementAccepted) {
+        echo '<p>You must agree to the <a href="https://nameblock.com/terms" target="_blank">Terms of Service</a> before using this module.</p>';
+        return;
+    }
+
     $action = $_GET['action'] ?? '';
     $dispatcher = new AdminDispatcher();
     echo $dispatcher->dispatch($action, $vars);
@@ -100,10 +109,17 @@ function nameblock_output($vars)
 
 function nameblock_clientarea($vars)
 {
+    $agreementAccepted = Capsule::table('tbladdonmodules')
+        ->where('module', 'nameblock')
+        ->where('setting', 'agreement')
+        ->value('value');
+
+    if (!$agreementAccepted) {
+        return '<p>You must agree to the <a href="https://nameblock.com/terms" target="_blank">Terms of Service</a> before using this module.</p>';
+    }
+
     $action = $_GET['action'] ?? 'index';
-
     $dispatcher = new ClientDispatcher();
-
     return $dispatcher->dispatch($action, $vars);
 }
 
