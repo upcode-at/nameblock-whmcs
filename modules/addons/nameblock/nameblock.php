@@ -66,7 +66,6 @@ function nameblock_activate()
             $table->enum('status', ['pending', 'completed', 'failed'])->default('pending');
             $table->timestamps();
         });
-
         return ['status' => 'success', 'description' => 'Module activated successfully.'];
     } catch (\Exception $e) {
         return ['status' => 'error', 'description' => 'Activation Error: ' . $e->getMessage()];
@@ -107,21 +106,6 @@ function nameblock_output($vars)
     echo $dispatcher->dispatch($action, $vars);
 }
 
-function nameblock_clientarea($vars)
-{
-    $agreementAccepted = Capsule::table('tbladdonmodules')
-        ->where('module', 'nameblock')
-        ->where('setting', 'agreement')
-        ->value('value');
-
-    if (!$agreementAccepted) {
-        return '<p>You must agree to the <a href="https://nameblock.com/terms" target="_blank">Terms of Service</a> before using this module.</p>';
-    }
-
-    $action = $_GET['action'] ?? 'index';
-    $dispatcher = new ClientDispatcher();
-    return $dispatcher->dispatch($action, $vars);
-}
 
 /**
  * Cron Job to Process Pending Orders.

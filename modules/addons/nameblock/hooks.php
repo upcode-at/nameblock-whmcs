@@ -16,6 +16,7 @@
 use WHMCS\Database\Capsule;
 use WHMCS\View\Menu\Item as MenuItem;
 use WHMCS\ClientArea;
+use WHMCS\Smarty;
 
 
 require_once __DIR__ . '/lib/NameblockAPI.php';
@@ -60,31 +61,49 @@ add_hook('OrderPaid', 1, function($params) {
     }
 });
 
-add_hook('ClientAreaPrimaryNavbar', 1, function (MenuItem $primaryNavbar) {
-    if (!is_null($_SESSION['uid'])) {
-        $primaryNavbar->addChild('nameblock_blocklist', [
-            'label' => 'Block List',
-            'uri' => 'clientarea.php?action=productdetails&m=nameblock&action=getBlockList',
-            'order' => 10,
-        ]);
+/**
+ * Hook to display a custom message on the client area dashboard.
+ */
+add_hook('ClientAreaHomepage', 1, function($vars) {
+    $userId = $_SESSION['uid'];
+    $pendingOrders = Capsule::table('mod_nameblock_pending_orders')
+        ->where('user_id', $userId)
+        ->get();
+
+    $blocksData = [];
+    $apiToken = Capsule::table('tbladdonmodules')
+        ->where('module', 'nameblock')
+        ->where('setting', 'apiToken')
+        ->value('value');
+
+    if ($apiToken) {
+        $blocksAPI = new Blocks($apiToken);
+        foreach ($pendingOrders as $order) {
+            try {
+                $parts = explode('.', $order->domain, 2);
+                if (count($parts) == 2) {
+                    $label = $parts[0];
+                    $tld = $parts[1];
+                    $response = $blocksAPI->getBlockList($label, $tld, 'as-01');
+
+                    if (isset($response['data']['variants']) && is_array($response['data']['variants'])) {
+                        $blocksData[$order->domain] = $response['data']['variants'];
+                        
+                    } else {
+                        $blocksData[$order->domain] = [];
+                    }
+                } else {
+                    $blocksData[$order->domain] = [];
+                }
+            } catch (Exception $e) {
+                $blocksData[$order->domain] = [];
+            }
+        }
     }
-});
 
-add_hook('ClientAreaPage', 1, function($vars) {
-    if ($_GET['m'] === 'nameblock' && $_GET['action'] === 'getBlockList') {
-        $ca = new ClientArea();
-        $ca->setPageTitle("My Block List");
-        $ca->addToBreadCrumb('index.php', 'Home');
-        $ca->addToBreadCrumb('clientarea.php', 'Client Area');
-        $ca->addToBreadCrumb('clientarea.php?action=productdetails&m=nameblock&action=getBlockList', 'Block List');
-
-        // Controller-Methode für Daten abrufen
-        $controller = new \Nameblock\Client\Controller();
-        $output = $controller->getBlockList($vars);
-
-        $ca->setTemplate('clientblocklist'); // Lade das Template
-        $ca->assign('output', $output);
-
-        return $ca->output();
-    }
+    $smarty = new \WHMCS\Smarty();
+    $smarty->assign('pendingOrders', $pendingOrders);
+    $smarty->assign('blocksData', $blocksData);
+    
+    return $smarty->fetch(ROOTDIR . '/modules/addons/nameblock/templates/dashboard.tpl');
 });
