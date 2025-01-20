@@ -134,13 +134,32 @@ function nameblock_cron()
         try {
             $controller = new \WHMCS\Module\Addon\Nameblock\Admin\Controller();
 
+            // Fetch product details to determine the product_id from the Nameblock API
+            $productsAPI = new \Products($apiToken);
+            $response = $productsAPI->getAllProducts('abuse_shield');
+
+            $productId = null;
+            if (isset($response['data']) && is_array($response['data'])) {
+                foreach ($response['data'] as $product) {
+                    if ($product['name'] === $order->product_name) {
+                        $productId = $product['id'];
+                        break;
+                    }
+                }
+            }
+
+            if (!$productId) {
+                logActivity("Nameblock: Product ID not found for product name: {$order->product_name}");
+                continue;
+            }
+
             $payload = [
                 'promotion' => null,
                 'registrant_id' => $order->user_id,
                 'block_label' => $order->domain,
                 'domain_name' => $order->domain,
                 'tld' => substr(strrchr($order->domain, "."), 1),
-                'product_id' => 'as-01',
+                'product_id' => $productId,
                 'quantity' => 1,
                 'term' => 1,
             ];
