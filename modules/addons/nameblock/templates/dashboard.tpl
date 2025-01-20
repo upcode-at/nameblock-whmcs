@@ -1,26 +1,32 @@
-<div style="max-width: 800px; margin: 20px auto; font-family: Arial, sans-serif; background: #f9f9f9; border-radius: 8px; padding: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
-    <h3 style="text-align: center; color: #007bff;">NameBlock Orders</h3>
-    <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
-        <thead>
-            <tr style="background-color: #007bff; color: #fff;">
-                <th style="padding: 10px; text-align: left;">Order ID</th>
-                <th style="padding: 10px; text-align: left;">Domain</th>
-                <th style="padding: 10px; text-align: left;">Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            {foreach from=$pendingOrders item=order}
-            <tr style="background-color: #f9f9f9;">
-                <td style="padding: 10px; border: 1px solid #ddd;">{$order->order_id}</td>
-                <td style="padding: 10px; border: 1px solid #ddd;">
-                    <a href="#" class="domain-link" data-domain="{$order->domain}" data-blocks='{$blocksData[$order->domain]|json_encode}'>{$order->domain}</a>
-                </td>
-                <td style="padding: 10px; border: 1px solid #ddd;">{$order->status}</td>
-            </tr>
-            {/foreach}
-        </tbody>
-    </table>
-</div>
+    <div menuitemname="NameBlock Orders" class="panel panel-default panel-accent-green" id="nameblockPanel">
+        <div class="panel-heading">
+            <h3 class="panel-title">
+                <i class="fas fa-cube"></i>&nbsp; NameBlock Orders
+            </h3>
+        </div>
+        <div class="panel-body">
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Domain</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {foreach from=$pendingOrders item=order}
+                    <tr>
+                        <td>{$order->order_id}</td>
+                        <td>
+                            <a href="#" class="domain-link" data-domain="{$order->domain}" data-blocks='{$blocksData[$order->domain]|json_encode}'>{$order->domain}</a>
+                        </td>
+                        <td>{$order->status}</td>
+                    </tr>
+                    {/foreach}
+                </tbody>
+            </table>
+        </div>
+    </div>
 
 <div id="overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000;">
     <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fff; padding: 20px; border-radius: 8px; width: 80%; max-width: 600px; max-height: 80%; overflow-y: auto;">
