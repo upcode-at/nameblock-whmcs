@@ -1,7 +1,7 @@
     <div menuitemname="NameBlock Orders" class="panel panel-default panel-accent-green" id="nameblockPanel">
         <div class="panel-heading">
             <h3 class="panel-title">
-                <i class="fas fa-cube"></i>&nbsp; NameBlock Orders
+                <i class="fas fa-cubes"></i>&nbsp; NameBlock Orders
             </h3>
         </div>
         <div class="panel-body">
