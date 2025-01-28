@@ -9,6 +9,9 @@ use WHMCS\Database\Capsule;
 use WHMCS\Module\Addon\Nameblock\Admin\AdminDispatcher;
 use WHMCS\Module\Addon\Nameblock\Client\ClientDispatcher;
 
+use WHMCS\Module\Server\CustomAction;
+use WHMCS\Module\Server\CustomActionCollection;
+
 if (!defined("WHMCS")) {
     die("This file cannot be accessed directly");
 }
@@ -179,3 +182,4 @@ function nameblock_cron()
         }
     }
 }
+

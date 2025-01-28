@@ -27,24 +27,57 @@ class Controller {
     {
         $modulelink = $vars['modulelink'];
 
-    return <<<HTML
-    <h2>NameBlock - Prevent DNS Abuse</h2>
-    <p>Welcome to the NameBlock - Prevent DNS Abuse Module.</p>
+        return <<<HTML
+        <h2>NameBlock - Prevent DNS Abuse</h2>
+        <p>Welcome to the NameBlock - Prevent DNS Abuse Module.</p>
 
-    <ul>
-        <li><a href="{$modulelink}&action=createOrder">Create New Order</a></li>
-        <li><a href="{$modulelink}&action=listOrders">List Orders</a></li>
-        <li><a href="{$modulelink}&action=getBlockList">List Blocks</a></li>
-        <li><a href="{$modulelink}&action=listRegistrants">List Registrants</a></li>
-        <li><a href="{$modulelink}&action=viewRegistrant">View Registrant</a></li>
-        <li><a href="{$modulelink}&action=createRegistrant">Create Registrants</a></li>
-        <li><a href="{$modulelink}&action=listProducts">List Products</a></li>
-        <li><a href="{$modulelink}&action=listTLDs">List TLDs</a></li>
-        <li><a href="{$modulelink}&action=viewLogs">View Logs</a></li>
-        <li><a href="{$modulelink}&action=syncProducts">Sync Nameblock Products</a></li>
-        <li><a href="{$modulelink}&action=dashboard">Dashboard</a></li>
-    </ul>
-    HTML;
+        <div style="display: flex; flex-wrap: wrap; gap: 20px;">
+            <a href="{$modulelink}&action=createOrder" style="flex: 1 1 calc(25% - 20px); text-align: center;">
+                <div style="font-size: 2em;"><i class="fa fa-plus-circle"></i></div>
+                <div>Create New Order</div>
+            </a>
+            <a href="{$modulelink}&action=listOrders" style="flex: 1 1 calc(25% - 20px); text-align: center;">
+                <div style="font-size: 2em;"><i class="fa fa-list"></i></div>
+                <div>List Orders</div>
+            </a>
+            <a href="{$modulelink}&action=getBlockList" style="flex: 1 1 calc(25% - 20px); text-align: center;">
+                <div style="font-size: 2em;"><i class="fa fa-ban"></i></div>
+                <div>List Blocks</div>
+            </a>
+            <a href="{$modulelink}&action=listRegistrants" style="flex: 1 1 calc(25% - 20px); text-align: center;">
+                <div style="font-size: 2em;"><i class="fa fa-users"></i></div>
+                <div>List Registrants</div>
+            </a>
+            <a href="{$modulelink}&action=viewRegistrant" style="flex: 1 1 calc(25% - 20px); text-align: center;">
+                <div style="font-size: 2em;"><i class="fa fa-user"></i></div>
+                <div>View Registrant</div>
+            </a>
+            <a href="{$modulelink}&action=createRegistrant" style="flex: 1 1 calc(25% - 20px); text-align: center;">
+                <div style="font-size: 2em;"><i class="fa fa-user-plus"></i></div>
+                <div>Create Registrants</div>
+            </a>
+            <a href="{$modulelink}&action=listProducts" style="flex: 1 1 calc(25% - 20px); text-align: center;">
+                <div style="font-size: 2em;"><i class="fa fa-cubes"></i></div>
+                <div>List Products</div>
+            </a>
+            <a href="{$modulelink}&action=listTLDs" style="flex: 1 1 calc(25% - 20px); text-align: center;">
+                <div style="font-size: 2em;"><i class="fa fa-globe"></i></div>
+                <div>List TLDs</div>
+            </a>
+            <a href="{$modulelink}&action=viewLogs" style="flex: 1 1 calc(25% - 20px); text-align: center;">
+                <div style="font-size: 2em;"><i class="fa fa-file-alt"></i></div>
+                <div>View Logs</div>
+            </a>
+            <a href="{$modulelink}&action=syncProducts" style="flex: 1 1 calc(25% - 20px); text-align: center;">
+                <div style="font-size: 2em;"><i class="fa fa-sync"></i></div>
+                <div>Sync Nameblock Products</div>
+            </a>
+            <a href="{$modulelink}&action=dashboard" style="flex: 1 1 calc(25% - 20px); text-align: center;">
+                <div style="font-size: 2em;"><i class="fa fa-tachometer-alt"></i></div>
+                <div>Dashboard</div>
+            </a>
+        </div>
+        HTML;
     }
 
     /**
