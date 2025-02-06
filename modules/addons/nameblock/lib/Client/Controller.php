@@ -26,13 +26,4 @@ class Controller
         HTML;
     }
 
-    public function getBlockList($vars)
-    {
-        $variants = [
-            ['id' => 1, 'domain_name' => 'example1.com'],
-            ['id' => 2, 'domain_name' => 'example2.net']
-        ];
-    
-        return ['variants' => $variants, 'modulelink' => $vars['modulelink']];
-    }
 }

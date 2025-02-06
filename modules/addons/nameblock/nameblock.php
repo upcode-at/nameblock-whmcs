@@ -40,7 +40,7 @@ function nameblock_config()
             'agreement' => [
                 'FriendlyName' => 'Agreement',
                 'Type' => 'yesno',
-                'Description' => 'I agree to the <a href="https://nameblock.com/terms" target="_blank">Terms of Service</a>',
+                'Description' => 'I agree to the <a href="../modules/addons/nameblock/download.php" target="_blank">Terms of Service</a>',
                 'Default' => '',
             ],
         ]
@@ -66,6 +66,8 @@ function nameblock_activate()
             $table->integer('order_id');
             $table->string('domain');
             $table->integer('user_id');
+            $table->integer('product_id');
+            $table->string('product_name');
             $table->enum('status', ['pending', 'completed', 'failed'])->default('pending');
             $table->timestamps();
         });

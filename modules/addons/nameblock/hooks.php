@@ -40,6 +40,17 @@ add_hook('OrderPaid', 1, function($params) {
         ->where('orderid', $orderId)
         ->get();
 
+    // Fetch API token
+    $apiToken = Capsule::table('tbladdonmodules')
+        ->where('module', 'nameblock')
+        ->where('setting', 'apiToken')
+        ->value('value');
+
+    if (!$apiToken) {
+        logActivity("Nameblock: API token is not configured.");
+        return;
+    }
+
     // Loop through all items in the order
     foreach ($orderItems as $item) {
         // Fetch product details to determine if it's a Nameblock product
@@ -48,11 +59,32 @@ add_hook('OrderPaid', 1, function($params) {
             ->first();
 
         if ($product && strpos($product->name, 'Nameblock') !== false) {
+            // Fetch product ID from Nameblock API
+            $productsAPI = new \Products($apiToken);
+            $response = $productsAPI->getAllProducts('abuse_shield');
+
+            $productId = null;
+            if (isset($response['data']) && is_array($response['data'])) {
+                foreach ($response['data'] as $apiProduct) {
+                    if ($apiProduct['name'] === $product->name) {
+                        $productId = $apiProduct['id'];
+                        break;
+                    }
+                }
+            }
+
+            if (!$productId) {
+                logActivity("Nameblock: Product ID not found for product name: {$product->name}");
+                continue;
+            }
+
             // Nameblock product found, mark the order for future processing
             Capsule::table('mod_nameblock_pending_orders')->insert([
                 'order_id' => $orderId,
-                'product_id' => $item->packageid,
+                'product_id' => $productId,
+                'product_name' => $product->name,
                 'user_id' => $item->userid,
+                'domain' => $item->domain,
                 'status' => 'pending',
                 'created_at' => date('Y-m-d H:i:s'),
                 'process_after' => date('Y-m-d H:i:s', strtotime('+2 hours')),

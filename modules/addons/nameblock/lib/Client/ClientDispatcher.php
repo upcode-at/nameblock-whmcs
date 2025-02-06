@@ -22,8 +22,6 @@ class ClientDispatcher
         $controller = new Controller();
     
         switch ($action) {
-            case 'getBlockList':
-                return $controller->getBlockList($vars);
             default:
                 return "<h2>Welcome to Nameblock</h2>";
         }
