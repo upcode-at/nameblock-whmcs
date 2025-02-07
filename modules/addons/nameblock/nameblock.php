@@ -102,7 +102,124 @@ function nameblock_output($vars)
         ->value('value');
 
     if (!$agreementAccepted) {
-        echo '<p>You must agree to the <a href="https://nameblock.com/terms" target="_blank">Terms of Service</a> before using this module.</p>';
+        echo '<p>You must agree to the <a href="../modules/addons/nameblock/download.php" target="_blank">Terms of Service</a> before using this module.</p>';
+        return;
+    }
+
+    $apiToken = Capsule::table('tbladdonmodules')
+        ->where('module', 'nameblock')
+        ->where('setting', 'apiToken')
+        ->value('value');
+
+    if (!$apiToken) {
+        echo '<style>
+                form {
+                    max-width: 600px;
+                    margin: 0 auto;
+                    padding: 20px;
+                    border: 1px solid #ccc;
+                    border-radius: 10px;
+                    background-color: #f9f9f9;
+                }
+                label {
+                    display: block;
+                    margin-bottom: 8px;
+                    font-weight: bold;
+                }
+                input[type="text"],
+                input[type="email"] {
+                    width: 100%;
+                    padding: 8px;
+                    margin-bottom: 10px;
+                    border: 1px solid #ccc;
+                    border-radius: 4px;
+                }
+                input[type="submit"] {
+                    background-color: #4CAF50;
+                    color: white;
+                    padding: 10px 20px;
+                    border: none;
+                    border-radius: 4px;
+                    cursor: pointer;
+                }
+                input[type="submit"]:hover {
+                    background-color: #45a049;
+                }
+                h1 {
+                    margin-top: 30px;
+                    margin-bottom: 15px;
+                    color: #333;
+                    font-size: 1.5em;
+                    border-bottom: 2px solid #ccc;
+                    padding-bottom: 5px;
+                }
+              </style>';
+        echo '<form method="post" action="save_api_token.php">
+                <label for="email">E-Mail-Address</label>
+                <input type="email" id="email" name="email" required>
+                <br>
+                <label for="name">Reseller Business Name</label>
+                <input type="text" id="name" name="name" required>
+                <br>
+                <h1>Primary/Default Contact Information</h1>
+                <br>
+                <label for="primary_email">Primary/Default Contact E-Mail</label>
+                <input type="email" id="primary_email" name="primary_email" required>
+                <br>
+                <label for="primary_phone">Primary/Default Contact Phone</label>
+                <input type="text" id="primary_phone" name="primary_phone" required>
+                <br>
+                <h1>Address Information</h1>
+                <br>
+                <label for="street">Street</label>
+                <input type="text" id="street" name="street" required>
+                <br>
+                <label for="city">City</label>
+                <input type="text" id="city" name="city" required>
+                <br>
+                <label for="postal_code">Postal Code</label>
+                <input type="text" id="postal_code" name="postal_code" required>
+                <br>
+                <label for="state">State</label>
+                <input type="text" id="state" name="state" required>
+                <br>
+                <label for="country">Country Code</label>
+                <input type="text" id="country" name="country" required>
+                <br>
+                <h1>Technical Contact</h1>
+                <br>
+                <label for="tech_email">Technical Contact E-Mail</label>
+                <input type="email" id="tech_email" name="tech_email" required>
+                <br>
+                <label for="tech_phone">Technical Contact Phone</label>
+                <input type="text" id="tech_phone" name="tech_phone" required>
+                <br>
+                <h1>Administrative Contact</h1>
+                <br>
+                <label for="admin_email">Administrative Contact E-Mail</label>
+                <input type="email" id="admin_email" name="admin_email" required>
+                <br>
+                <label for="admin_phone">Administrative Contact Phone</label>
+                <input type="text" id="admin_phone" name="admin_phone" required>
+                <br>
+                <h1>Billing Contact</h1>
+                <br>
+                <label for="billing_email">Billing Contact E-Mail</label>
+                <input type="email" id="billing_email" name="billing_email" required>
+                <br>
+                <label for="billing_phone">Billing Contact Phone</label>
+                <input type="text" id="billing_phone" name="billing_phone" required>
+                <br>
+                <h1>Secondary Contact (in case Primary is unavailable)</h1>
+                <br>
+                <label for="secondary_name">Secondary Contact Name</label>
+                <input type="text" id="secondary_name" name="secondary_name" required>
+                <br>
+                <label for="secondary_email">Secondary Contact E-Mail</label>
+                <input type="email" id="secondary_email" name="secondary_email" required>
+                <br>
+                <input type="submit" value="Submit Onboarding Information">
+              </form>';
         return;
     }
 
